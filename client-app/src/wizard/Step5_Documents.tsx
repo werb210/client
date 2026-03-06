@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { ClientAppAPI } from "../api/clientApp";
@@ -83,6 +83,90 @@ function resolveDocumentCategory(docType: string) {
   return match?.label || "Additional Requirements";
 }
 
+const ALLOWED_TYPES = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+const ALLOWED_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg", ".docx", ".xlsx"];
+const MAX_UPLOAD_SIZE_BYTES = 25 * 1024 * 1024;
+
+function getDynamicRequirementRules({ selectedCategory, amountValue, countryCode }) {
+  const requiresArAging =
+    String(selectedCategory || "").toLowerCase().includes("factoring") ||
+    amountValue >= 150000 ||
+    countryCode === "US";
+
+  return [
+    { id: "bank_statements", document_type: "bank_statements", required: true },
+    { id: "financial_statements", document_type: "financial_statements", required: true },
+    { id: "supporting_documents", document_type: "supporting_documents", required: true },
+    { id: "AR_aging", document_type: "AR_aging", required: requiresArAging },
+  ];
+}
+
+const RequirementRow = memo(function RequirementRow({
+  entry,
+  app,
+  isUploading,
+  docError,
+  progress,
+  onPick,
+  onDrop,
+  docStatus,
+}) {
+  const docType = entry.document_type;
+  return (
+    <FileUploadCard
+      key={entry.id}
+      title={formatDocumentLabel(docType)}
+      status={isUploading ? `Uploading ${progress}%` : docStatus}
+      data-error={Boolean(docError) || docStatus === "missing" || docStatus === "rejected"}
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => {
+        event.preventDefault();
+        const file = event.dataTransfer.files?.[0] || null;
+        onDrop(docType, file);
+      }}
+    >
+      <input
+        id={`doc-${entry.id}`}
+        type="file"
+        style={{ display: "none" }}
+        onChange={(e: unknown) => onDrop(docType, e.target.files?.[0] || null)}
+      />
+      <div style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.xs }}>
+        <label style={{ display: "flex", alignItems: "center", gap: tokens.spacing.xs }}>
+          <Checkbox checked={docStatus !== "missing"} readOnly />
+          <span style={{ fontWeight: 600, color: tokens.colors.primary }}>{formatDocumentLabel(docType)}</span>
+        </label>
+        <div style={{ ...components.form.helperText, fontSize: 12 }}>
+          {entry.required ? "Required" : "Optional"} · {docStatus === "missing" ? "Missing" : "Uploaded"}
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={isUploading}
+          loading={isUploading}
+          onClick={() => onPick(entry.id)}
+          style={{ width: "100%" }}
+          aria-label={`Upload ${formatDocumentLabel(docType)}`}
+        >
+          Upload file
+        </Button>
+        {isUploading ? <div style={components.form.helperText}>Upload progress: {progress}%</div> : null}
+        {app.documents[docType] && <div style={components.form.helperText}>Uploaded: {app.documents[docType].name}</div>}
+        {docError && <div style={components.form.errorText}>{docError}</div>}
+        {!docError && docStatus === "missing" && entry.required && <div style={components.form.errorText}>This document is required.</div>}
+        {docStatus === "rejected" && <div style={components.form.errorText}>{getRejectionMessage(app.documents[docType])}</div>}
+      </div>
+    </FileUploadCard>
+  );
+});
+
+
 export function Step5_Documents() {
   const { app, update } = useApplicationStore();
   const navigate = useNavigate();
@@ -93,6 +177,7 @@ export function Step5_Documents() {
   const [isLoading, setIsLoading] = useState(true);
   const [docErrors, setDocErrors] = useState<Record<string, string>>({});
   const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>({});
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const selectedCategory =
     app.productCategory ||
     app.selectedProductType ||
@@ -189,7 +274,8 @@ export function Step5_Documents() {
         selectedCategory,
         amountValue
       );
-      const normalized = ensureAlwaysRequiredDocuments(aggregated);
+      const dynamicRules = getDynamicRequirementRules({ selectedCategory, amountValue, countryCode });
+      const normalized = ensureAlwaysRequiredDocuments(mergeRequirementLists(aggregated, dynamicRules));
 
       if (active) {
         setIsLoading(true);
@@ -305,84 +391,75 @@ export function Step5_Documents() {
   }
 
   async function handleFile(docType: string, file: File | null) {
-    if (!file || !app.applicationToken! || !app.selectedProductId) return;
+    if (!file || !app.applicationToken!) return;
 
     setDocErrors((prev) => ({ ...prev, [docType]: "" }));
 
-    if (file.size > 15 * 1024 * 1024) {
+    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
       setDocErrors((prev) => ({
         ...prev,
-        [docType]: "File too large. Max 15 MB.",
+        [docType]: "File too large. Max 25 MB.",
       }));
       return;
     }
 
-    const allowedTypes = [
-      "application/pdf",
-      "image/png",
-      "image/jpeg",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ];
-
     const fileType = file.type || "";
     const extension = file.name.toLowerCase();
-    const allowedExtensions = [".pdf", ".png", ".jpg", ".jpeg", ".docx", ".xlsx"];
-
     const validType =
-      allowedTypes.includes(fileType) ||
-      allowedExtensions.some((ext) => extension.endsWith(ext));
+      ALLOWED_TYPES.includes(fileType) ||
+      ALLOWED_EXTENSIONS.some((ext) => extension.endsWith(ext));
 
     if (!validType) {
       setDocErrors((prev) => ({
         ...prev,
-        [docType]: "Unsupported file type. Allowed: PDF, PNG, JPEG, DOCX, XLSX.",
+        [docType]: "Unsupported file type. Allowed: PDF, DOCX, XLSX, PNG, JPG.",
       }));
       return;
     }
 
-    try {
-      setUploadingDocs((prev) => ({ ...prev, [docType]: true }));
-      const base64 = await readFileAsBase64(file);
-      const payload = {
-        documents: {
-          [docType]: {
-            name: file.name,
-            base64,
-            productId: app.selectedProductId,
-            documentCategory: docType,
+    setUploadingDocs((prev) => ({ ...prev, [docType]: true }));
+    setUploadProgress((prev) => ({ ...prev, [docType]: 0 }));
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        await ClientAppAPI.uploadDocument({
+          applicationToken: app.applicationToken!,
+          applicationId: app.applicationId,
+          documentType: docType,
+          file,
+          onProgress: (progress) => {
+            setUploadProgress((prev) => ({ ...prev, [docType]: progress }));
           },
-        },
-      };
+        });
 
-      await ClientAppAPI.uploadDoc(app.applicationToken!, payload);
-      const refreshed = await ClientAppAPI.status(app.applicationToken!);
-      const hydrated = extractApplicationFromStatus(
-        refreshed?.data || {},
-        app.applicationToken!
-      );
+        const refreshed = await ClientAppAPI.status(app.applicationToken!);
+        const hydrated = extractApplicationFromStatus(refreshed?.data || {}, app.applicationToken!);
 
-      update({
-        documentsDeferred: false,
-        documents: hydrated.documents || app.documents,
-        documentReviewComplete:
-          hydrated.documentReviewComplete ?? app.documentReviewComplete,
-        financialReviewComplete:
-          hydrated.financialReviewComplete ?? app.financialReviewComplete,
-      });
-      setDocErrors((prev) => ({ ...prev, [docType]: "" }));
-      trackEvent("document_uploaded", { category: docType });
-      trackEvent("client_document_uploaded", { documentType: docType });
-      track("document_uploaded", { documentType: docType });
-    } catch {
-      setDocErrors((prev) => ({
-        ...prev,
-        [docType]: "Document upload failed. Please try again.",
-      }));
-    } finally {
-      setUploadingDocs((prev) => ({ ...prev, [docType]: false }));
+        update({
+          documentsDeferred: false,
+          documents: hydrated.documents || app.documents,
+          documentReviewComplete: hydrated.documentReviewComplete ?? app.documentReviewComplete,
+          financialReviewComplete: hydrated.financialReviewComplete ?? app.financialReviewComplete,
+        });
+        setDocErrors((prev) => ({ ...prev, [docType]: "" }));
+        trackEvent("document_uploaded", { category: docType });
+        trackEvent("client_document_uploaded", { documentType: docType });
+        track("document_uploaded", { documentType: docType });
+        break;
+      } catch {
+        if (attempt === 3) {
+          setDocErrors((prev) => ({
+            ...prev,
+            [docType]: "Document upload failed. Please retry.",
+          }));
+        }
+      }
     }
+
+    setUploadingDocs((prev) => ({ ...prev, [docType]: false }));
+    setUploadProgress((prev) => ({ ...prev, [docType]: 0 }));
   }
+
 
   function next() {
     if (missingRequiredDocs.length > 0 || hasBlockingUploadErrors) {
@@ -471,87 +548,18 @@ export function Step5_Documents() {
               </div>
               {entries.map((entry) => {
                 const docType = entry.document_type;
-                const docStatus = getDocStatus(docType);
-                const docError = docErrors[docType];
-                const isUploading = uploadingDocs[docType];
                 return (
-                  <FileUploadCard
+                  <RequirementRow
                     key={entry.id}
-                    title={formatDocumentLabel(docType)}
-                    status={isUploading ? "Uploading" : docStatus}
-                    data-error={
-                      Boolean(docError) ||
-                      docStatus === "missing" ||
-                      docStatus === "rejected"
-                    }
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      const file = event.dataTransfer.files?.[0] || null;
-                      handleFile(docType, file);
-                    }}
-                  >
-                    <input
-                      id={`doc-${entry.id}`}
-                      type="file"
-                      style={{ display: "none" }}
-                      onChange={(e: unknown) =>
-                        handleFile(docType, e.target.files?.[0] || null)
-                      }
-                    />
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: tokens.spacing.xs,
-                      }}
-                    >
-                      <label
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: tokens.spacing.xs,
-                        }}
-                      >
-                        <Checkbox checked={docStatus !== "missing"} readOnly />
-                        <span
-                          style={{ fontWeight: 600, color: tokens.colors.primary }}
-                        >
-                          {formatDocumentLabel(docType)}
-                        </span>
-                      </label>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        disabled={isUploading}
-                        loading={isUploading}
-                        onClick={() =>
-                          document.getElementById(`doc-${entry.id}`)?.click()
-                        }
-                        style={{ width: "100%" }}
-                      >
-                        Upload file
-                      </Button>
-                      {app.documents[docType] && (
-                        <div style={components.form.helperText}>
-                          Uploaded: {app.documents[docType].name}
-                        </div>
-                      )}
-                      {docError && (
-                        <div style={components.form.errorText}>{docError}</div>
-                      )}
-                      {!docError && docStatus === "missing" && (
-                        <div style={components.form.errorText}>
-                          This document is required.
-                        </div>
-                      )}
-                      {docStatus === "rejected" && (
-                        <div style={components.form.errorText}>
-                          {getRejectionMessage(app.documents[docType])}
-                        </div>
-                      )}
-                    </div>
-                  </FileUploadCard>
+                    entry={entry}
+                    app={app}
+                    isUploading={Boolean(uploadingDocs[docType])}
+                    progress={uploadProgress[docType] || 0}
+                    docError={docErrors[docType]}
+                    docStatus={getDocStatus(docType)}
+                    onPick={(entryId) => document.getElementById(`doc-${entryId}`)?.click()}
+                    onDrop={handleFile}
+                  />
                 );
               })}
             </div>

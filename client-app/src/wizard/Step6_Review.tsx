@@ -401,6 +401,10 @@ export function Step6_Review(): JSX.Element {
       clearStoredReadinessSession();
       localStorage.removeItem("creditPrefill");
       setTimeout(() => {
+        if (nextApplicationId) {
+          navigate(`/application/${nextApplicationId}`, { replace: true, state: { submitted: true } });
+          return;
+        }
         navigate("/portal", { replace: true });
       }, 1200);
     } catch (error: unknown) {
@@ -416,6 +420,10 @@ export function Step6_Review(): JSX.Element {
         clearStoredReadinessSession();
       localStorage.removeItem("creditPrefill");
         setTimeout(() => {
+          if (resolveSubmissionId(data)) {
+            navigate(`/application/${resolveSubmissionId(data)}`, { replace: true, state: { submitted: true, duplicate: true } });
+            return;
+          }
           navigate("/portal", { replace: true });
         }, 1200);
         return;

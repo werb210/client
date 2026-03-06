@@ -45,9 +45,9 @@ describe("OffersView", () => {
     expect(html).toContain('target="_blank"');
   });
 
-  it("does not render accept or reject actions", () => {
+  it("renders offer action buttons", () => {
     const html = renderToStaticMarkup(<OffersView offers={[baseOffer]} />);
-    expect(html).not.toMatch(/accept/i);
-    expect(html).not.toMatch(/reject/i);
+    expect(html).toMatch(/Accept Offer/i);
+    expect(html).toMatch(/Request Changes/i);
   });
 });

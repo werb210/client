@@ -1,63 +1,134 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { QualificationSummary } from "./QualificationSummary";
 import { StartupWaitlistForm } from "./StartupWaitlistForm";
-import { sendMessageToMaya, escalateMayaChat } from "../services/mayaService";
 import { useMayaSession } from "../store/mayaSession";
-
-type MayaResponse = {
-  reply?: string;
-  requiresConfirmation?: boolean;
-  action?: string;
-  escalated?: boolean;
-  qualification?: Partial<Record<"funding_amount" | "annual_revenue" | "time_in_business" | "product_type" | "industry", string | number | null>>;
-  startupUnavailable?: boolean;
-};
+import api from "@/lib/api";
 
 type ChatMessage = {
+  id: string;
   role: "user" | "assistant";
   content: string;
+  createdAt: number;
+  optimistic?: boolean;
 };
 
-export default function MayaClientChat() {
+export default function MayaClientChat({ applicationId }: { applicationId?: string | null }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [requiresConfirmation, setRequiresConfirmation] = useState(false);
   const [escalated, setEscalated] = useState(false);
   const [showStartupWaitlist, setShowStartupWaitlist] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [typing, setTyping] = useState(false);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
   const setField = useMayaSession((state) => state.setField);
 
-  async function sendMessage() {
-    if (!input.trim()) return;
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const onResize = () => {
+      const diff = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      setKeyboardHeight(diff);
+    };
+    viewport.addEventListener("resize", onResize);
+    viewport.addEventListener("scroll", onResize);
+    onResize();
+    return () => {
+      viewport.removeEventListener("resize", onResize);
+      viewport.removeEventListener("scroll", onResize);
+    };
+  }, []);
 
-    const nextMessage = input;
-    const userMsg: ChatMessage = { role: "user", content: nextMessage };
-    setMessages((prev) => [...prev, userMsg]);
+  const sortedMessages = useMemo(
+    () => [...messages].sort((a, b) => a.createdAt - b.createdAt),
+    [messages]
+  );
 
-    const { data } = (await sendMessageToMaya(nextMessage)) as { data: MayaResponse };
+  useEffect(() => {
+    if (!scrollerRef.current) return;
+    scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
+  }, [sortedMessages, keyboardHeight, typing]);
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: data.reply || "I can help with that." },
-    ]);
+  useEffect(() => {
+    if (!applicationId) return;
+    let active = true;
 
-    if (data.qualification) {
-      for (const [field, value] of Object.entries(data.qualification)) {
-        setField(field, value);
+    const load = async () => {
+      try {
+        const response = await api.get(`/messages/${applicationId}`);
+        if (!active) return;
+        const list = Array.isArray((response.data as any)?.messages)
+          ? (response.data as any).messages
+          : Array.isArray(response.data)
+            ? (response.data as any)
+            : [];
+        setMessages(
+          list.map((entry: any, index: number) => ({
+            id: String(entry.id || `${index}`),
+            role: entry.role === "assistant" ? "assistant" : "user",
+            content: String(entry.content || entry.message || ""),
+            createdAt: new Date(entry.createdAt || entry.created_at || Date.now()).getTime(),
+          }))
+        );
+      } catch {
+        // noop
       }
-    }
+    };
 
-    setRequiresConfirmation(
-      Boolean(data.requiresConfirmation && data.action === "book")
-    );
-    setEscalated(Boolean(data.escalated));
-    setShowStartupWaitlist(Boolean(data.startupUnavailable));
+    void load();
+    const timer = window.setInterval(load, 5000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [applicationId]);
+
+  async function sendMessage() {
+    if (!input.trim() || !applicationId || sending) return;
+
+    const nextMessage = input.trim();
+    const optimisticId = `tmp-${Date.now()}`;
+    const optimisticMessage: ChatMessage = {
+      id: optimisticId,
+      role: "user",
+      content: nextMessage,
+      createdAt: Date.now(),
+      optimistic: true,
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
     setInput("");
-  }
+    setSending(true);
+    setTyping(true);
 
-  async function escalateToHuman() {
-    await escalateMayaChat();
-    setEscalated(true);
+    try {
+      await api.post("/messages", {
+        applicationId,
+        message: nextMessage,
+      });
+
+      const response = await api.get(`/messages/${applicationId}`);
+      const list = Array.isArray((response.data as any)?.messages)
+        ? (response.data as any).messages
+        : Array.isArray(response.data)
+          ? (response.data as any)
+          : [];
+      setMessages(
+        list.map((entry: any, index: number) => ({
+          id: String(entry.id || `${index}`),
+          role: entry.role === "assistant" ? "assistant" : "user",
+          content: String(entry.content || entry.message || ""),
+          createdAt: new Date(entry.createdAt || entry.created_at || Date.now()).getTime(),
+        }))
+      );
+      setField("last_message", nextMessage);
+    } catch {
+      setMessages((prev) => prev.map((item) => (item.id === optimisticId ? { ...item, optimistic: false } : item)));
+    } finally {
+      setSending(false);
+      setTyping(false);
+    }
   }
 
   return (
@@ -69,8 +140,7 @@ export default function MayaClientChat() {
         borderRadius: "8px",
       }}
     >
-      <h3>Maya — Funding Assistant</h3>
-
+      <h3>Chat Window</h3>
       <label style={{ display: "inline-flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
         <input
           type="checkbox"
@@ -80,42 +150,36 @@ export default function MayaClientChat() {
         Voice mode ready
       </label>
 
-      <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-        {messages.map((message, index) => (
-          <div key={index}>
-            <strong>{message.role === "user" ? "You" : "Maya"}:</strong>
+      <div
+        ref={scrollerRef}
+        style={{ maxHeight: `calc(60vh - ${keyboardHeight}px)`, overflowY: "auto" }}
+        aria-live="polite"
+      >
+        {sortedMessages.map((message) => (
+          <div key={message.id}>
+            <strong>{message.role === "user" ? "You" : "Staff"}:</strong>
             <div>{message.content}</div>
           </div>
         ))}
+        {typing ? <div style={{ opacity: 0.7 }}>Staff is typing…</div> : null}
       </div>
 
-      {escalated && (
-        <div style={{ color: "red", marginTop: "0.75rem" }}>
-          A Boreal specialist has been notified.
-        </div>
-      )}
-
-      <button onClick={escalateToHuman} style={{ marginTop: "0.75rem" }}>
+      <button onClick={() => setEscalated(true)} style={{ marginTop: "0.75rem" }}>
         Talk to a Human
       </button>
+      {escalated && <div style={{ color: "red", marginTop: "0.75rem" }}>A specialist has been notified.</div>}
 
-      <div style={{ marginTop: "1rem" }}>
+      <div style={{ marginTop: "1rem", paddingBottom: keyboardHeight ? 8 : 0 }}>
         <input
+          aria-label="Message input"
           value={input}
           onChange={(event) => setInput(event.target.value)}
           style={{ width: "75%" }}
         />
-        <button onClick={sendMessage}>Send</button>
+        <button onClick={sendMessage} disabled={sending}>Send</button>
       </div>
 
-      {requiresConfirmation && (
-        <div style={{ marginTop: "0.5rem", color: "rgb(71 85 105)" }}>
-          Please confirm your booking intent with a specialist in chat.
-        </div>
-      )}
-
       <QualificationSummary />
-
       {showStartupWaitlist && <StartupWaitlistForm />}
     </div>
   );

@@ -581,10 +581,12 @@ export function StatusPage(): JSX.Element {
                     })}
                   </div>
                 )}
-                <div style={components.form.helperText}>
-                  Personal net worth and collateral forms will appear here when
-                  available.
-                </div>
+                <SecondaryButton style={{ width: "100%" }} onClick={() => navigate("/coming-soon")}>Personal Net Worth</SecondaryButton>
+                <SecondaryButton style={{ width: "100%" }} onClick={() => navigate("/coming-soon")}>Inventory Collateral Form</SecondaryButton>
+                <SecondaryButton style={{ width: "100%" }} onClick={() => navigate("/coming-soon")}>Equipment Collateral Form</SecondaryButton>
+                <SecondaryButton style={{ width: "100%" }} onClick={() => navigate("/coming-soon")}>Real Estate Collateral Form</SecondaryButton>
+                <SecondaryButton style={{ width: "100%" }} onClick={() => navigate("/coming-soon")}>Debt Schedule</SecondaryButton>
+                <SecondaryButton style={{ width: "100%" }} onClick={() => navigate("/coming-soon")}>Media Attachments</SecondaryButton>
               </div>
             </Card>
           </div>
@@ -597,7 +599,7 @@ export function StatusPage(): JSX.Element {
                   Continue your secure conversation with Maya here.
                 </div>
                 <ClientErrorBoundary>
-                  <MayaClientChat />
+                  <MayaClientChat applicationId={applicationId} />
                 </ClientErrorBoundary>
               </div>
             </Card>

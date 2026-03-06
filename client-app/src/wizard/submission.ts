@@ -12,10 +12,10 @@ export type SubmissionDocument = {
 };
 
 export type SubmissionPayload = {
+  borrower: ApplicationData["kyc"];
+  company: ApplicationData["business"];
+  financials: ApplicationData["applicant"];
   application: {
-    kyc: ApplicationData["kyc"];
-    business: ApplicationData["business"];
-    applicant: ApplicationData["applicant"];
     product_category: ApplicationData["productCategory"];
     selected_product: ApplicationData["selectedProduct"];
     selected_product_type: ApplicationData["selectedProductType"];
@@ -67,10 +67,10 @@ export function buildSubmissionPayload(app: ApplicationData): SubmissionPayload 
   );
 
   return {
+    borrower: app.kyc,
+    company: app.business,
+    financials: app.applicant,
     application: {
-      kyc: app.kyc,
-      business: app.business,
-      applicant: app.applicant,
       product_category: app.productCategory,
       selected_product: app.selectedProduct,
       selected_product_type: app.selectedProductType,
