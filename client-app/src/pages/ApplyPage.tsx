@@ -1,10 +1,12 @@
 // @ts-nocheck
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Step1_FinancialProfile } from "../wizard/Step1_FinancialProfile";
+import { Step1_KYC } from "../wizard/Step1_KYC";
 import { Step2_ProductCategory } from "../wizard/Step2_ProductCategory";
 import { Step3_BusinessDetails } from "../wizard/Step3_BusinessDetails";
 import { Step4_ApplicantInformation } from "../wizard/Step4_ApplicantInformation";
+import { Step5_Documents } from "../wizard/Step5_Documents";
+import { Step6_TermsSignature } from "../wizard/Step6_TermsSignature";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { components, layout, tokens } from "@/styles";
 import { Spinner } from "../components/ui/Spinner";
@@ -323,11 +325,13 @@ export function ApplyPage() {
         }
       >
         <Routes>
-          <Route path="/" element={<Navigate to={`step-${Math.max(1, Math.min(4, Number(app.currentStep || (readiness ? 2 : 1))))}`} replace />} />
-          <Route path="step-1" element={<Step1_FinancialProfile />} />
+          <Route path="/" element={<Navigate to={`step-${Math.max(1, Math.min(6, Number(app.currentStep || (readiness ? 2 : 1))))}`} replace />} />
+          <Route path="step-1" element={<Step1_KYC />} />
           <Route path="step-2" element={<Step2_ProductCategory />} />
           <Route path="step-3" element={<Step3_BusinessDetails />} />
           <Route path="step-4" element={<Step4_ApplicantInformation />} />
+          <Route path="step-5" element={<Step5_Documents />} />
+          <Route path="step-6" element={<Step6_TermsSignature />} />
         </Routes>
       </Suspense>
     </div>
