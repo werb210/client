@@ -16,6 +16,17 @@ import { fetchContinuation } from "@/api/continuation";
 import { fetchPrefill } from "@/utils/prefill";
 import { useReadiness } from "@/state/readinessStore";
 
+
+const steps = [
+  Step1_KYC,
+  Step2_ProductCategory,
+  Step3_BusinessDetails,
+  Step4_ApplicantInformation,
+  Step5_Documents,
+  Step6_TermsSignature,
+];
+
+
 export function ApplyPage() {
   const { initialized, init, app, update } = useApplicationStore();
   const { applicationId } = useParams();
@@ -326,12 +337,13 @@ export function ApplyPage() {
       >
         <Routes>
           <Route path="/" element={<Navigate to={`step-${Math.max(1, Math.min(6, Number(app.currentStep || (readiness ? 2 : 1))))}`} replace />} />
-          <Route path="step-1" element={<Step1_KYC />} />
-          <Route path="step-2" element={<Step2_ProductCategory />} />
-          <Route path="step-3" element={<Step3_BusinessDetails />} />
-          <Route path="step-4" element={<Step4_ApplicantInformation />} />
-          <Route path="step-5" element={<Step5_Documents />} />
-          <Route path="step-6" element={<Step6_TermsSignature />} />
+          {steps.map((StepComponent, index) => (
+            <Route
+              key={`step-${index + 1}`}
+              path={`step-${index + 1}`}
+              element={<StepComponent />}
+            />
+          ))}
         </Routes>
       </Suspense>
     </div>

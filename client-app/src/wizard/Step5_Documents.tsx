@@ -93,20 +93,13 @@ const ALLOWED_TYPES = [
 const ALLOWED_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg", ".docx", ".xlsx"];
 const MAX_UPLOAD_SIZE_BYTES = 25 * 1024 * 1024;
 
-function getDynamicRequirementRules({ selectedCategory, amountValue, countryCode }) {
-  const requiresArAging =
-    String(selectedCategory || "").toLowerCase().includes("factoring") ||
-    amountValue >= 150000 ||
-    countryCode === "US";
-
+function getDynamicRequirementRules() {
   return [
     { id: "bank_statements", document_type: "bank_statements", required: true },
     { id: "financial_statements", document_type: "financial_statements", required: true },
     { id: "tax_returns", document_type: "tax_returns", required: true },
     { id: "contracts", document_type: "contracts", required: true },
     { id: "invoices", document_type: "invoices", required: true },
-    { id: "supporting_documents", document_type: "supporting_documents", required: true },
-    { id: "AR_aging", document_type: "AR_aging", required: requiresArAging },
   ];
 }
 
@@ -277,7 +270,7 @@ export function Step5_Documents() {
         selectedCategory,
         amountValue
       );
-      const dynamicRules = getDynamicRequirementRules({ selectedCategory, amountValue, countryCode });
+      const dynamicRules = getDynamicRequirementRules();
       const normalized = ensureAlwaysRequiredDocuments(mergeRequirementLists(aggregated, dynamicRules));
 
       if (active) {
