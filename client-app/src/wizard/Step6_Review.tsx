@@ -183,6 +183,14 @@ export function Step6_Review(): JSX.Element {
     update({ termsAccepted: !app.termsAccepted });
   }
 
+  function toggleInfoConfirmed() {
+    update({ infoConfirmed: !app.infoConfirmed });
+  }
+
+  function toggleShareAuthorization() {
+    update({ shareAuthorization: !app.shareAuthorization });
+  }
+
   function resolveSubmissionId(data: unknown) {
     if (!data || typeof data !== "object") return null;
     const root = data as Record<string, any>;
@@ -277,7 +285,7 @@ export function Step6_Review(): JSX.Element {
     }
 
     if (!app.termsAccepted) {
-      alert("You must accept the Terms & Conditions.");
+      alert("Please complete all confirmations before submitting.");
       return;
     }
 
@@ -292,7 +300,7 @@ export function Step6_Review(): JSX.Element {
         applicant: app.applicant,
         documents: app.documents,
         documentsDeferred: Boolean(app.documentsDeferred),
-        termsAccepted: app.termsAccepted,
+        termsAccepted: app.termsAccepted && Boolean(app.infoConfirmed) && Boolean(app.shareAuthorization),
         typedSignature: app.typedSignature,
         coApplicantSignature: app.coApplicantSignature,
         signatureDate: app.signatureDate || today,
@@ -581,7 +589,7 @@ export function Step6_Review(): JSX.Element {
 
   return (
     <WizardLayout>
-      <StepHeader step={6} title="Terms & Typed Signature" />
+      <StepHeader step={6} title="Terms & Conditions + Typed Signature" />
 
       <Card style={{ display: "flex", flexDirection: "column", gap: tokens.spacing.lg }}>
         <div>
@@ -739,6 +747,33 @@ export function Step6_Review(): JSX.Element {
             color: tokens.colors.textPrimary,
           }}
         >
+          <Checkbox checked={Boolean(app.infoConfirmed)} onChange={toggleInfoConfirmed} />
+          <span>I confirm the information is accurate</span>
+        </label>
+
+        <label
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: tokens.spacing.xs,
+            fontSize: tokens.typography.label.fontSize,
+            fontWeight: tokens.typography.label.fontWeight,
+            color: tokens.colors.textPrimary,
+          }}
+        >
+          <Checkbox checked={Boolean(app.shareAuthorization)} onChange={toggleShareAuthorization} />
+          <span>I authorize Boreal Financial to share my application with lenders</span>
+        </label>
+        <label
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: tokens.spacing.xs,
+            fontSize: tokens.typography.label.fontSize,
+            fontWeight: tokens.typography.label.fontWeight,
+            color: tokens.colors.textPrimary,
+          }}
+        >
           <Checkbox checked={app.termsAccepted} onChange={toggleTerms} />
           <span>I agree to the Terms & Conditions</span>
         </label>
@@ -772,7 +807,7 @@ export function Step6_Review(): JSX.Element {
                   hasIdempotencyKey: Boolean(idempotencyKey),
                   hasApplicationToken: Boolean(app.applicationToken!),
                   hasSelectedProductId: Boolean(app.selectedProductId),
-                  termsAccepted: app.termsAccepted,
+                  termsAccepted: app.termsAccepted && Boolean(app.infoConfirmed) && Boolean(app.shareAuthorization),
                   typedSignature: Boolean(app.typedSignature?.trim()),
                   partnerSignature: hasPartner ? Boolean(app.coApplicantSignature?.trim()) : true,
                   missingIdDocs: missingIdDocs.length,
@@ -784,7 +819,7 @@ export function Step6_Review(): JSX.Element {
                 })
               }
             >
-              {submitting ? "Submitting..." : "Submit application"}
+              {submitting ? "Submitting..." : "Submit Application"}
             </Button>
           </div>
         </div>

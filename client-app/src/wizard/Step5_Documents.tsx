@@ -570,6 +570,13 @@ export function Step5_Documents() {
       <div style={{ ...layout.stickyCta, marginTop: tokens.spacing.lg }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: tokens.spacing.sm }}>
           <Button
+            variant="secondary"
+            style={{ width: "100%", maxWidth: "160px" }}
+            onClick={() => navigate("/apply/step-4")}
+          >
+            Back
+          </Button>
+          <Button
             style={{ width: "100%", maxWidth: "220px" }}
             onClick={next}
             disabled={!canContinue}
@@ -582,7 +589,7 @@ export function Step5_Documents() {
             onClick={uploadLater}
             disabled={isLoading || hasUploadsInFlight}
           >
-            Skip documents
+            Supply Documents Later
           </Button>
         </div>
       </div>
