@@ -12,6 +12,13 @@ export type SelectedProduct = {
 };
 
 export interface ApplicationData {
+  applicationDraft?: {
+    borrower: Record<string, unknown>;
+    company: Record<string, unknown>;
+    financials: Record<string, unknown>;
+    application: Record<string, unknown>;
+    documents: Array<Record<string, unknown>>;
+  };
   kyc: unknown;
   productCategory: string | null;
   matchPercentages: Record<string, number>;

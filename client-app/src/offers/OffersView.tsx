@@ -16,6 +16,8 @@ export type OfferTermSheet = {
 
 export type OffersViewProps = {
   offers: OfferTermSheet[];
+  onAcceptOffer?: (offerId: string) => Promise<void> | void;
+  onRequestChanges?: (offerId: string) => void;
 };
 
 const NEAR_EXPIRY_DAYS = 7;
@@ -133,7 +135,7 @@ function TermSheetButton({ url }: { url?: string | null }) {
   );
 }
 
-function OfferCard({ offer, archived }: { offer: OfferTermSheet; archived: boolean }) {
+function OfferCard({ offer, archived, onAcceptOffer, onRequestChanges }: { offer: OfferTermSheet; archived: boolean; onAcceptOffer?: (offerId: string)=>Promise<void>|void; onRequestChanges?: (offerId: string)=>void; }) {
   const amount = formatCurrency(getAmountValue(offer));
   const termLength = getTermLength(offer);
   const rateValue = formatRate(getRateValue(offer));
@@ -226,7 +228,17 @@ function OfferCard({ offer, archived }: { offer: OfferTermSheet; archived: boole
           </div>
         </div>
 
-        {!archived ? <TermSheetButton url={offer.document_url} /> : null}
+        {!archived ? (
+          <div style={{ display: "flex", gap: tokens.spacing.sm, flexWrap: "wrap" }}>
+            <TermSheetButton url={offer.document_url} />
+            <button type="button" style={{ ...components.buttons.base, ...components.buttons.secondary }} onClick={() => onRequestChanges?.(offer.id)}>
+              Request Changes
+            </button>
+            <button type="button" style={{ ...components.buttons.base, ...components.buttons.primary }} onClick={() => onAcceptOffer?.(offer.id)}>
+              Accept Offer
+            </button>
+          </div>
+        ) : null}
         {archived ? (
           <div style={components.form.helperText}>
             This term sheet is archived and view-only.
@@ -237,7 +249,7 @@ function OfferCard({ offer, archived }: { offer: OfferTermSheet; archived: boole
   );
 }
 
-export function OffersView({ offers }: OffersViewProps) {
+export function OffersView({ offers, onAcceptOffer, onRequestChanges }: OffersViewProps) {
   const { active, archived } = useMemo(() => {
     const activeOffers: OfferTermSheet[] = [];
     const archivedOffers: OfferTermSheet[] = [];
@@ -285,7 +297,7 @@ export function OffersView({ offers }: OffersViewProps) {
           >
             <h2 style={components.form.sectionTitle}>Active offers</h2>
             {active.map((offer) => (
-              <OfferCard key={offer.id} offer={offer} archived={false} />
+              <OfferCard key={offer.id} offer={offer} archived={false} onAcceptOffer={onAcceptOffer} onRequestChanges={onRequestChanges} />
             ))}
           </section>
         ) : null}
@@ -318,7 +330,7 @@ export function OffersView({ offers }: OffersViewProps) {
               }}
             >
               {archived.map((offer) => (
-                <OfferCard key={offer.id} offer={offer} archived />
+                <OfferCard key={offer.id} offer={offer} archived onAcceptOffer={onAcceptOffer} onRequestChanges={onRequestChanges} />
               ))}
             </div>
           </details>

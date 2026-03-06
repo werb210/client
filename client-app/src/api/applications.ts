@@ -102,13 +102,14 @@ export async function uploadApplicationDocument(
     onProgress?: (progress: number) => void;
   }
 ): Promise<any> {
-  if (payload.file.size > 10 * 1024 * 1024) {
+  if (payload.file.size > 25 * 1024 * 1024) {
     throw new Error("file_too_large");
   }
 
-  const uploadUrl = `/api/applications/${id}/documents`;
+  const uploadUrl = `/documents/upload`;
   const formData = new FormData();
   formData.append("document_category", payload.documentCategory);
+  formData.append("application_id", id);
   formData.append("file", payload.file);
 
   if (!navigator.onLine) {
@@ -123,4 +124,10 @@ export async function uploadApplicationDocument(
   const data = await uploadDocument(payload.file, id);
   payload.onProgress?.(100);
   return data as unknown;
+}
+
+
+export async function acceptApplicationOffer(offerId: string): Promise<any> {
+  const res: unknown = await api.post(`/api/offers/${offerId}/accept`);
+  return (res as { data?: unknown }).data;
 }

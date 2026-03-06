@@ -39,6 +39,7 @@ const ApplyPage = lazy(() => import("../pages/ApplyPage").then((module) => ({ de
 const PortalEntry = lazy(() => import("../pages/PortalEntry").then((module) => ({ default: module.PortalEntry })));
 const ContinueApplication = lazy(() => import("../pages/ContinueApplication"));
 const ProductDetail = lazy(() => import("../pages/ProductDetail"));
+const ComingSoonPage = lazy(() => import("../pages/ComingSoon").then((module) => ({ default: module.ComingSoon })));
 const Step1 = lazy(() => import("../wizard/Step1_KYC"));
 const Step2 = lazy(() => import("../wizard/Step2_Product"));
 const Step3 = lazy(() => import("../wizard/Step3_Business"));
@@ -209,6 +210,7 @@ export default function AppRouter(): JSX.Element {
           <Route path="/resume" element={<ResumePage />} />
           <Route path="/continue/:token" element={<ContinueApplication />} />
           <Route path="/products/:slug" element={<ProductDetail />} />
+          <Route path="/coming-soon" element={<ComingSoonPage />} />
           <Route path="/apply/success" element={<PublicApplySuccessPage />} />
 
           <Route path="/apply">

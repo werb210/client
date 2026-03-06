@@ -60,6 +60,33 @@ export const ClientAppAPI = {
       api.patch<ClientAppStatusResponse>(`/api/applications/${token}`, payload)
     );
   },
+
+  uploadDocument(
+    payload: {
+      applicationId?: string;
+      applicationToken?: string;
+      documentType: string;
+      file: File;
+      onProgress?: (progress: number) => void;
+    }
+  ) {
+    return withRetry(async () => {
+      const formData = new FormData();
+      formData.append("file", payload.file);
+      formData.append("document_type", payload.documentType);
+      if (payload.applicationId) formData.append("application_id", payload.applicationId);
+      if (payload.applicationToken) formData.append("application_token", payload.applicationToken);
+      const res = await api.post<GenericObjectResponse>("/documents/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (event: ProgressEvent) => {
+          if (!event.total) return;
+          const percent = Math.round((event.loaded / event.total) * 100);
+          payload.onProgress?.(percent);
+        },
+      });
+      return res;
+    });
+  },
   deferDocuments(token: string) {
     return withRetry(() =>
       api.patch<ClientAppStatusResponse>(`/api/applications/${token}`, { documentsDeferred: true })

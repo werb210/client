@@ -61,7 +61,7 @@ describe("submission payload", () => {
   it("includes lender product id, application data, and document metadata", () => {
     const payload = buildSubmissionPayload(baseApp);
     expect(payload.lender_product_id).toBe("prod-1");
-    expect(payload.application.business).toEqual({ legalName: "Acme Co" });
+    expect(payload.company).toEqual({ legalName: "Acme Co" });
     expect(payload.documents).toEqual([
       {
         document_type: "bank_statements",

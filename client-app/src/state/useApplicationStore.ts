@@ -12,6 +12,7 @@ import { buildApiUrl } from "../lib/api";
 import { apiRequest } from "@/services/api";
 
 const emptyApp: ApplicationData = {
+  applicationDraft: emptyApplicationDraft,
   kyc: {},
   productCategory: null,
   matchPercentages: {},
@@ -44,6 +45,51 @@ const emptyApp: ApplicationData = {
   ocrComplete: undefined,
   creditSummaryComplete: undefined,
 };
+
+
+const emptyApplicationDraft = {
+  borrower: {},
+  company: {},
+  financials: {},
+  application: {},
+  documents: [],
+};
+
+function buildApplicationDraft(source: ApplicationData) {
+  const docs = Object.entries(source.documents || {}).map(([type, value]) => ({
+    document_type: type,
+    name: value?.name || type,
+    status: value?.status || "missing",
+    category: value?.category || type,
+  }));
+
+  return {
+    borrower: {
+      ...(source.kyc as Record<string, unknown> || {}),
+      ...(source.applicant as Record<string, unknown> || {}),
+    },
+    company: {
+      ...(source.business as Record<string, unknown> || {}),
+    },
+    financials: {
+      fundingAmount: (source.kyc as Record<string, unknown>)?.fundingAmount,
+      annualRevenue:
+        (source.kyc as Record<string, unknown>)?.annualRevenue ||
+        (source.kyc as Record<string, unknown>)?.revenueLast12Months,
+      monthlyRevenue: (source.kyc as Record<string, unknown>)?.monthlyRevenue,
+      accountsReceivable: (source.kyc as Record<string, unknown>)?.accountsReceivable,
+    },
+    application: {
+      productCategory: source.productCategory,
+      selectedProductId: source.selectedProductId,
+      selectedProductType: source.selectedProductType,
+      currentStep: source.currentStep,
+      termsAccepted: source.termsAccepted,
+      signatureDate: source.signatureDate,
+    },
+    documents: docs,
+  };
+}
 
 const CLIENT_DRAFT_KEY = "boreal_client_draft";
 const BOREAL_DRAFT_KEY = "boreal_draft";
@@ -119,7 +165,7 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
       ? saved.requires_closing_cost_funding
       : undefined;
 
-  return {
+  const hydrated = {
     ...emptyApp,
     ...saved,
     requires_closing_cost_funding: savedClosingCostFunding,
@@ -151,6 +197,11 @@ function hydrateApplication(saved: ApplicationData | null): ApplicationData {
       typeof saved.creditSummaryComplete === "boolean"
         ? saved.creditSummaryComplete
         : undefined,
+  };
+
+  return {
+    ...hydrated,
+    applicationDraft: saved.applicationDraft || buildApplicationDraft(hydrated),
   };
 }
 
@@ -201,7 +252,11 @@ export function useApplicationStore() {
 
   function update(part: Partial<ApplicationData>) {
     setApp((state) => {
-      const updated = { ...state, ...part };
+      const nextState = { ...state, ...part } as ApplicationData;
+      const updated = {
+        ...nextState,
+        applicationDraft: buildApplicationDraft(nextState),
+      };
       OfflineStore.save(updated);
 
       if (!canAutosave) {

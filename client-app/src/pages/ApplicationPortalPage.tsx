@@ -242,8 +242,9 @@ export function ApplicationPortalPage(): JSX.Element {
         "image/png",
         "image/jpeg",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       ];
-      const allowedExtensions = [".pdf", ".png", ".jpg", ".jpeg", ".docx"];
+      const allowedExtensions = [".pdf", ".png", ".jpg", ".jpeg", ".docx", ".xlsx"];
       const extension = file.name.toLowerCase();
       const validType =
         allowedTypes.includes(file.type) ||
@@ -251,7 +252,7 @@ export function ApplicationPortalPage(): JSX.Element {
       if (!validType) {
         setUploadErrors((prev) => ({
           ...prev,
-          [category]: "Unsupported file type. Allowed: PDF, PNG, JPEG, DOCX.",
+          [category]: "Unsupported file type. Allowed: PDF, DOCX, XLSX, PNG, JPG.",
         }));
         return;
       }
