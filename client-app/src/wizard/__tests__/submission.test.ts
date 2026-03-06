@@ -61,7 +61,7 @@ describe("submission payload", () => {
   it("includes lender product id, application data, and document metadata", () => {
     const payload = buildSubmissionPayload(baseApp);
     expect(payload.lender_product_id).toBe("prod-1");
-    expect(payload.company).toEqual({ legalName: "Acme Co" });
+    expect(payload.business_info).toEqual({ legalName: "Acme Co" });
     expect(payload.documents).toEqual([
       {
         document_type: "bank_statements",
@@ -76,6 +76,15 @@ describe("submission payload", () => {
   it("includes readinessLeadId in submission payload", () => {
     const payload = buildSubmissionPayload(baseApp);
     expect(payload.application.readiness_lead_id).toBe("lead-123");
+    expect(payload.kyc_answers).toEqual({ fundingAmount: 4000 });
+    expect(payload.product_category).toBe("Working Capital");
+    expect(payload.applicant_info).toEqual({ fullName: "Taylor Doe" });
+    expect(payload.signature).toEqual({
+      terms_accepted: true,
+      typed_signature: "Taylor Doe",
+      co_applicant_signature: undefined,
+      signature_date: "2024-10-04",
+    });
   });
 
   it("detects missing required documents", () => {

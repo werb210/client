@@ -102,6 +102,9 @@ function getDynamicRequirementRules({ selectedCategory, amountValue, countryCode
   return [
     { id: "bank_statements", document_type: "bank_statements", required: true },
     { id: "financial_statements", document_type: "financial_statements", required: true },
+    { id: "tax_returns", document_type: "tax_returns", required: true },
+    { id: "contracts", document_type: "contracts", required: true },
+    { id: "invoices", document_type: "invoices", required: true },
     { id: "supporting_documents", document_type: "supporting_documents", required: true },
     { id: "AR_aging", document_type: "AR_aging", required: requiresArAging },
   ];
@@ -376,19 +379,6 @@ export function Step5_Documents() {
   useForegroundRefresh(() => {
     refreshDocumentStatus();
   }, [refreshDocumentStatus]);
-
-  function readFileAsBase64(file: File) {
-    return new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("Failed to read file."));
-      reader.onload = () => {
-        const result = String(reader.result || "");
-        const base64 = result.includes(",") ? result.split(",")[1] : result;
-        resolve(base64);
-      };
-      reader.readAsDataURL(file);
-    });
-  }
 
   async function handleFile(docType: string, file: File | null) {
     if (!file || !app.applicationToken!) return;

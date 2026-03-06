@@ -12,9 +12,17 @@ export type SubmissionDocument = {
 };
 
 export type SubmissionPayload = {
-  borrower: ApplicationData["kyc"];
-  company: ApplicationData["business"];
-  financials: ApplicationData["applicant"];
+  kyc_answers: ApplicationData["kyc"];
+  product_category: ApplicationData["productCategory"];
+  business_info: ApplicationData["business"];
+  applicant_info: ApplicationData["applicant"];
+  documents: SubmissionDocument[];
+  signature: {
+    terms_accepted: ApplicationData["termsAccepted"];
+    typed_signature?: ApplicationData["typedSignature"];
+    co_applicant_signature?: ApplicationData["coApplicantSignature"];
+    signature_date?: ApplicationData["signatureDate"];
+  };
   application: {
     product_category: ApplicationData["productCategory"];
     selected_product: ApplicationData["selectedProduct"];
@@ -30,7 +38,6 @@ export type SubmissionPayload = {
     readiness_lead_id?: ApplicationData["readinessLeadId"];
   };
   lender_product_id: string;
-  documents: SubmissionDocument[];
 };
 
 export function getMissingRequiredDocs(app: ApplicationData) {
@@ -67,9 +74,17 @@ export function buildSubmissionPayload(app: ApplicationData): SubmissionPayload 
   );
 
   return {
-    borrower: app.kyc,
-    company: app.business,
-    financials: app.applicant,
+    kyc_answers: app.kyc,
+    product_category: app.productCategory,
+    business_info: app.business,
+    applicant_info: app.applicant,
+    documents,
+    signature: {
+      terms_accepted: app.termsAccepted,
+      typed_signature: app.typedSignature,
+      co_applicant_signature: app.coApplicantSignature,
+      signature_date: app.signatureDate,
+    },
     application: {
       product_category: app.productCategory,
       selected_product: app.selectedProduct,
@@ -85,7 +100,6 @@ export function buildSubmissionPayload(app: ApplicationData): SubmissionPayload 
       readiness_lead_id: app.readinessLeadId,
     },
     lender_product_id: app.selectedProductId,
-    documents,
   };
 }
 

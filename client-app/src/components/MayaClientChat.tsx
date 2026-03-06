@@ -16,7 +16,7 @@ export default function MayaClientChat({ applicationId }: { applicationId?: stri
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [escalated, setEscalated] = useState(false);
-  const [showStartupWaitlist, setShowStartupWaitlist] = useState(false);
+  const [showStartupWaitlist] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
   const [sending, setSending] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);

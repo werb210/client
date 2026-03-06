@@ -28,7 +28,7 @@ export async function submitApplication(
         }
       : payload;
 
-  const res = await api.post<any>("/api/client/submissions", submissionPayload, {
+  const res = await api.post<any>("/api/client/applications", submissionPayload, {
     headers: options?.idempotencyKey
       ? { "Idempotency-Key": options.idempotencyKey }
       : undefined,
