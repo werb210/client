@@ -1,5 +1,6 @@
 const DB_NAME = "bf-upload-queue";
 const STORE_NAME = "uploads";
+const MAX_QUEUE_SIZE = 20;
 
 export type QueuedUpload = {
   id?: number;
@@ -44,7 +45,17 @@ function requestAsPromise<T>(request: IDBRequest<T>): Promise<T> {
 export async function enqueueUpload(data: QueuedUpload) {
   const db = await openDB();
   const tx = db.transaction(STORE_NAME, "readwrite");
-  tx.objectStore(STORE_NAME).add(data);
+  const store = tx.objectStore(STORE_NAME);
+  const queue = await requestAsPromise(store.getAll());
+
+  if (queue.length >= MAX_QUEUE_SIZE) {
+    const oldest = queue[0];
+    if (oldest?.id !== undefined) {
+      store.delete(oldest.id);
+    }
+  }
+
+  store.add(data);
   await txDone(tx);
 }
 

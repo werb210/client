@@ -40,6 +40,9 @@ const PortalEntry = lazy(() => import("../pages/PortalEntry").then((module) => (
 const ContinueApplication = lazy(() => import("../pages/ContinueApplication"));
 const ProductDetail = lazy(() => import("../pages/ProductDetail"));
 const ComingSoonPage = lazy(() => import("../pages/ComingSoon").then((module) => ({ default: module.ComingSoon })));
+const FAQPage = lazy(() => import("../pages/FAQPage"));
+const TroubleshootingPage = lazy(() => import("../pages/TroubleshootingPage"));
+const ConfirmationPage = lazy(() => import("../pages/ConfirmationPage"));
 const Step1 = lazy(() => import("../wizard/Step1_FinancialProfile"));
 const Step2 = lazy(() => import("../wizard/Step2_ProductCategory"));
 const Step3 = lazy(() => import("../wizard/Step3_BusinessDetails"));
@@ -193,6 +196,8 @@ export default function AppRouter(): JSX.Element {
           <Route path="/expired" element={<SessionExpiredPage />} />
           <Route path="/revoked" element={<SessionRevokedPage />} />
           <Route path="/system-status" element={<SystemStatus />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/troubleshooting" element={<TroubleshootingPage />} />
           <Route
             path="/status"
             element={
@@ -212,6 +217,7 @@ export default function AppRouter(): JSX.Element {
           <Route path="/products/:slug" element={<ProductDetail />} />
           <Route path="/coming-soon" element={<ComingSoonPage />} />
           <Route path="/apply/success" element={<PublicApplySuccessPage />} />
+          <Route path="/apply/confirmation" element={<ConfirmationPage />} />
 
           <Route path="/apply">
             <Route index element={<PublicApplyPage />} />
@@ -259,47 +265,7 @@ export default function AppRouter(): JSX.Element {
           </Route>
           <Route path="/apply/:applicationId/*" element={<ApplyPage />} />
 
-          <Route path="/application/step-1" element={<Step1 />} />
-          <Route
-            path="/application/step-2"
-            element={
-              <RequireApplicationToken>
-                <Step2 />
-              </RequireApplicationToken>
-            }
-          />
-          <Route
-            path="/application/step-3"
-            element={
-              <RequireApplicationToken>
-                <Step3 />
-              </RequireApplicationToken>
-            }
-          />
-          <Route
-            path="/application/step-4"
-            element={
-              <RequireApplicationToken>
-                <Step4 />
-              </RequireApplicationToken>
-            }
-          />
-          <Route
-            path="/application/step-5"
-            element={
-              <RequireApplicationToken>
-                <Step5 />
-              </RequireApplicationToken>
-            }
-          />
-          <Route
-            path="/application/step-6"
-            element={
-              <RequireApplicationToken>
-                <Step6 />
-              </RequireApplicationToken>
-            }
-          />
+          <Route path="/application/step-:step" element={<Navigate to="/apply/step-1" />} />
 
           <Route
             path="*"

@@ -16,6 +16,17 @@ type StorageLike = {
 
 export type SessionGuardAction = "noop" | "reload" | "redirect";
 
+export function getSessionToken() {
+  const cookieToken = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("bf_session="))
+    ?.split("=")[1];
+
+  if (cookieToken) return cookieToken;
+
+  return localStorage.getItem("bf_application_token");
+}
+
 function getSessionStorage(): StorageLike | null {
   if (typeof window === "undefined") return null;
   try {

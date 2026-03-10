@@ -171,9 +171,9 @@ export function Step2_Product() {
   }, []);
 
   useEffect(() => {
-    const guard = resolveStepGuard(app.currentStep, 2);
-    if (!guard.allowed) {
-      navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
+    const guardedStep = resolveStepGuard(app.currentStep, 2);
+    if (guardedStep !== 2) {
+      navigate(`/apply/step-${guardedStep}`, { replace: true });
     }
   }, [app.currentStep, navigate]);
 

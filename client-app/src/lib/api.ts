@@ -1,3 +1,5 @@
+import { logClientError } from "./logger";
+
 const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 export class ApiError extends Error {
@@ -16,6 +18,16 @@ export function buildApiUrl(path: string) {
   }
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return `${baseURL}${normalizedPath}`;
+}
+
+
+async function parseError(response: Response) {
+  try {
+    const data = await response.json()
+    return data?.error || data?.message || `API error ${response.status}`
+  } catch {
+    return `API error ${response.status}`
+  }
 }
 
 function handleStatus(status: number) {
@@ -52,7 +64,8 @@ export async function apiRequest<T = any>(url: string, options: RequestInit = {}
 
     if (!response.ok) {
       handleStatus(response.status);
-      throw new ApiError(`API error ${response.status}`, response.status);
+      const message = await parseError(response);
+      throw new ApiError(message, response.status);
     }
 
     try {
@@ -62,6 +75,7 @@ export async function apiRequest<T = any>(url: string, options: RequestInit = {}
     }
   } catch (error: unknown) {
     if (error instanceof ApiError) {
+      logClientError(error);
       throw error;
     }
 
@@ -73,6 +87,7 @@ export async function apiRequest<T = any>(url: string, options: RequestInit = {}
       throw new ApiError("You're offline. Please reconnect.", undefined, true);
     }
 
+    logClientError(error);
     throw error;
   } finally {
     clearTimeout(timeout);
