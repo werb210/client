@@ -30,6 +30,7 @@ import { components, layout, scrollToFirstError, tokens } from "@/styles";
 import { trackEvent } from "../utils/analytics";
 import { resolveStepGuard } from "./stepGuard";
 import { track } from "../utils/track";
+import { validateFile } from "@/utils/fileValidation";
 import { persistApplicationStep } from "./saveStepProgress";
 import { extractRequiredDocumentsFromStatus } from "../documents/requiredDocumentsFromStatus";
 import { syncRequiredDocumentsFromStatus } from "../documents/requiredDocumentsCache";
@@ -83,15 +84,6 @@ function resolveDocumentCategory(docType: string) {
   return match?.label || "Additional Requirements";
 }
 
-const ALLOWED_TYPES = [
-  "application/pdf",
-  "image/png",
-  "image/jpeg",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-];
-const ALLOWED_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg", ".docx", ".xlsx"];
-const MAX_UPLOAD_SIZE_BYTES = 25 * 1024 * 1024;
 
 function getDynamicRequirementRules() {
   return [
@@ -130,6 +122,7 @@ const RequirementRow = memo(function RequirementRow({
       <input
         id={`doc-${entry.id}`}
         type="file"
+        accept=".pdf,.docx,.xlsx,.png,.jpg"
         style={{ display: "none" }}
         onChange={(e: unknown) => onDrop(docType, e.target.files?.[0] || null)}
       />
@@ -378,24 +371,16 @@ export function Step5_Documents() {
 
     setDocErrors((prev) => ({ ...prev, [docType]: "" }));
 
-    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    try {
+      validateFile(file);
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message === "File exceeds 25MB limit"
+          ? "File too large. Max 25 MB."
+          : "Unsupported file type. Allowed: PDF, DOCX, XLSX, PNG, JPG.";
       setDocErrors((prev) => ({
         ...prev,
-        [docType]: "File too large. Max 25 MB.",
-      }));
-      return;
-    }
-
-    const fileType = file.type || "";
-    const extension = file.name.toLowerCase();
-    const validType =
-      ALLOWED_TYPES.includes(fileType) ||
-      ALLOWED_EXTENSIONS.some((ext) => extension.endsWith(ext));
-
-    if (!validType) {
-      setDocErrors((prev) => ({
-        ...prev,
-        [docType]: "Unsupported file type. Allowed: PDF, DOCX, XLSX, PNG, JPG.",
+        [docType]: message,
       }));
       return;
     }

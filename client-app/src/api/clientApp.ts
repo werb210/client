@@ -7,6 +7,7 @@ import {
   parseApiResponse,
 } from "@/contracts/clientApiSchemas";
 import type { ApiError } from "@/types/api";
+import { validateFile } from "@/utils/fileValidation";
 
 type ClientAppStartResponse = z.infer<typeof ClientAppStartResponseSchema>;
 type ClientAppStatusResponse = z.infer<typeof ClientAppStatusResponseSchema>;
@@ -71,6 +72,8 @@ export const ClientAppAPI = {
     }
   ) {
     return withRetry(async () => {
+      validateFile(payload.file);
+
       const formData = new FormData();
       formData.append("file", payload.file);
       formData.append("document_type", payload.documentType);

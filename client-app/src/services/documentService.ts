@@ -1,21 +1,16 @@
+import { validateFile } from "@/utils/fileValidation";
+import { apiRequest } from "./api";
+
 export async function uploadDocument(file: File, applicationId: string) {
-  if (file.size > 25 * 1024 * 1024) {
-    throw new Error("file_too_large");
-  }
+  validateFile(file);
 
   const formData = new FormData();
   formData.append("file", file);
   formData.append("application_id", applicationId);
 
-  const response = await fetch(`/documents/upload`, {
+  return apiRequest(`/documents/upload`, {
     method: "POST",
     body: formData,
-    credentials: "include",
+    headers: {},
   });
-
-  if (!response.ok) {
-    throw new Error("upload_failed");
-  }
-
-  return response.json();
 }
