@@ -1,4 +1,5 @@
 import { Call, Device } from "@twilio/voice-sdk";
+import { apiRequest } from "./api";
 
 let device: Device | null = null;
 let activeCall: Call | null = null;
@@ -20,13 +21,10 @@ export function subscribe(listener: (nextState: CallState) => void) {
 }
 
 export async function initVoice(identity: string) {
-  const res = await fetch("/api/telephony/token", {
+  const data = await apiRequest<{ token: string }>("/api/telephony/token", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ identity }),
   });
-
-  const data = await res.json();
 
   device = new Device(data.token);
 
