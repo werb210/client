@@ -64,9 +64,9 @@ export function Step3_Business() {
   }, []);
 
   useEffect(() => {
-    const guard = resolveStepGuard(app.currentStep, 3);
-    if (!guard.allowed) {
-      navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
+    const guardedStep = resolveStepGuard(app.currentStep, 3);
+    if (guardedStep !== 3) {
+      navigate(`/apply/step-${guardedStep}`, { replace: true });
     }
   }, [app.currentStep, navigate]);
 

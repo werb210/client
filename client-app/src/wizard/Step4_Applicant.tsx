@@ -68,9 +68,9 @@ export function Step4_Applicant() {
   }, []);
 
   useEffect(() => {
-    const guard = resolveStepGuard(app.currentStep, 4);
-    if (!guard.allowed) {
-      navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
+    const guardedStep = resolveStepGuard(app.currentStep, 4);
+    if (guardedStep !== 4) {
+      navigate(`/apply/step-${guardedStep}`, { replace: true });
     }
   }, [app.currentStep, navigate]);
 

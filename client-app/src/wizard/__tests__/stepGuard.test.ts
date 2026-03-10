@@ -2,27 +2,21 @@ import { describe, expect, it } from "vitest";
 import { resolveStepGuard } from "../stepGuard";
 
 describe("resolveStepGuard", () => {
-  it("permits moving forward a single step", () => {
-    const guard = resolveStepGuard(1, 2);
-    expect(guard.allowed).toBe(true);
-    expect(guard.redirectStep).toBe(2);
+  it("allows moving to the immediate next step", () => {
+    expect(resolveStepGuard(1, 2)).toBe(2);
   });
 
-  it("blocks skipping multiple steps ahead", () => {
-    const guard = resolveStepGuard(1, 4);
-    expect(guard.allowed).toBe(false);
-    expect(guard.redirectStep).toBe(1);
+  it("prevents skipping ahead by more than one step", () => {
+    expect(resolveStepGuard(1, 4)).toBe(2);
+    expect(resolveStepGuard(1, 3)).toBe(2);
   });
 
-  it("blocks deep-linking to step 3 from step 1", () => {
-    const guard = resolveStepGuard(1, 3);
-    expect(guard.allowed).toBe(false);
-    expect(guard.redirectStep).toBe(1);
+  it("allows moving backward", () => {
+    expect(resolveStepGuard(4, 2)).toBe(2);
   });
 
-  it("permits returning to completed steps", () => {
-    const guard = resolveStepGuard(4, 2);
-    expect(guard.allowed).toBe(true);
-    expect(guard.redirectStep).toBe(2);
+  it("supports all six wizard steps", () => {
+    expect(resolveStepGuard(6, 6)).toBe(6);
+    expect(resolveStepGuard(6, 8)).toBe(6);
   });
 });

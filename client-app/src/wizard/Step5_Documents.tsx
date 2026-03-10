@@ -231,9 +231,9 @@ export function Step5_Documents() {
   }, []);
 
   useEffect(() => {
-    const guard = resolveStepGuard(app.currentStep, 5);
-    if (!guard.allowed) {
-      navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
+    const guardedStep = resolveStepGuard(app.currentStep, 5);
+    if (guardedStep !== 5) {
+      navigate(`/apply/step-${guardedStep}`, { replace: true });
     }
   }, [app.currentStep, navigate]);
 

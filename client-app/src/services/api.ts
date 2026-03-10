@@ -1,3 +1,5 @@
+import { logClientError } from "@/lib/logger";
+
 export async function apiRequest<T>(
   url: string,
   options: RequestInit = {}
@@ -19,7 +21,9 @@ export async function apiRequest<T>(
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error((data as { error?: string })?.error || "api_error");
+    const error = new Error((data as { error?: string })?.error || "api_error");
+    logClientError(error);
+    throw error;
   }
 
   return data as T;

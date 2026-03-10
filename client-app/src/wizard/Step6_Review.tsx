@@ -130,9 +130,9 @@ export function Step6_Review(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    const guard = resolveStepGuard(app.currentStep, 6);
-    if (!guard.allowed) {
-      navigate(`/apply/step-${guard.redirectStep}`, { replace: true });
+    const guardedStep = resolveStepGuard(app.currentStep, 6);
+    if (guardedStep !== 6) {
+      navigate(`/apply/step-${guardedStep}`, { replace: true });
     }
   }, [app.currentStep, navigate]);
 

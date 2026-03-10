@@ -13,6 +13,9 @@ import { checkContinuation } from "../../services/continuation";
 import { getSessionId, trackEvent } from "../../utils/analytics";
 import { apiRequest } from "@/services/api";
 import type { ApiError } from "@/types/api";
+import { fundingAmountSchema, emailSchema, phoneSchema } from "@/utils/validationSchema";
+import { executeCaptcha } from "@/security/useCaptcha";
+import { logClientError } from "@/lib/logger";
 
 type FieldType =
   | "text"
@@ -69,6 +72,7 @@ export type PublicApplicationPayload = {
   communications_consent_at: string;
   client_ip: string;
   idempotencyToken?: string;
+  captchaToken?: string | null;
 };
 
 type PublicSubmissionState = {
@@ -390,12 +394,25 @@ export function validateApplication(values: ApplicationFormValues) {
     errors.start_date = "Provide years in business or a start date";
   }
 
-  if (values.contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.contact_email)) {
-    errors.contact_email = "Enter a valid email";
+  if (values.contact_email) {
+    const emailResult = emailSchema.safeParse(values.contact_email);
+    if (!emailResult.success) {
+      errors.contact_email = emailResult.error.issues[0]?.message || "Invalid email address";
+    }
   }
 
-  if (values.requested_amount && Number(values.requested_amount) <= 0) {
-    errors.requested_amount = "Enter a positive amount";
+  if (values.contact_phone) {
+    const phoneResult = phoneSchema.safeParse(values.contact_phone.replace(/[-()\s]/g, ""));
+    if (!phoneResult.success) {
+      errors.contact_phone = phoneResult.error.issues[0]?.message || "Invalid phone number";
+    }
+  }
+
+  if (values.requested_amount) {
+    const amountResult = fundingAmountSchema.safeParse(Number(values.requested_amount));
+    if (!amountResult.success) {
+      errors.requested_amount = amountResult.error.issues[0]?.message || "Invalid funding amount";
+    }
   }
 
   return errors;
@@ -482,6 +499,7 @@ export async function handlePublicApplicationSubmit({
   localStorage,
   readinessToken,
   sessionId,
+  captchaToken,
 }: {
   values: ApplicationFormValues;
   clientIp: string;
@@ -497,6 +515,7 @@ export async function handlePublicApplicationSubmit({
   localStorage?: MinimalStorage | null;
   readinessToken?: string | null;
   sessionId?: string | null;
+  captchaToken?: string | null;
 }) {
   const resolvedReadinessToken = readinessToken || null;
   const resolvedSessionId = sessionId || null;
@@ -547,6 +566,7 @@ export async function handlePublicApplicationSubmit({
 
   const idempotencyKey = getOrCreateIdempotencyKey(storage ?? null);
   payload.idempotencyToken = idempotencyKey;
+  payload.captchaToken = captchaToken ?? null;
 
   if (getRevenueTier(values.requested_amount) === "high") {
     trackEvent("high_value_submission_attempt", {
@@ -567,6 +587,7 @@ export async function handlePublicApplicationSubmit({
     clearDraft();
     onSuccess();
   } catch (error: unknown) {
+    logClientError(error);
     unlockSubmission(resolvedLockStorage);
     const apiError = error as ApiError;
     const responseData = apiError.response?.data;
@@ -637,6 +658,8 @@ export default function PublicApplyPage() {
       await apiRequest("/api/drafts/save", {
         method: "POST",
         body: JSON.stringify(draft),
+      }).catch((error) => {
+        logClientError(error);
       });
     }, 30000);
 
@@ -654,6 +677,9 @@ export default function PublicApplyPage() {
         if (data) {
           setValues((prev) => ({ ...prev, ...data }));
         }
+      })
+      .catch((error) => {
+        logClientError(error);
       });
   }, []);
 
@@ -769,6 +795,7 @@ export default function PublicApplyPage() {
     setIsSubmitting(true);
     setErrors({});
     try {
+      const captchaToken = await executeCaptcha();
       await handlePublicApplicationSubmit({
         values,
         clientIp,
@@ -784,6 +811,7 @@ export default function PublicApplyPage() {
         localStorage: getLocalStorage(),
         readinessToken,
         sessionId: readinessSessionId,
+        captchaToken,
       });
     } finally {
       setIsSubmitting(false);
