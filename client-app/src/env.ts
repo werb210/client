@@ -7,5 +7,5 @@ const getEnv = (key: string, fallback?: string) => {
 
 export const ENV = {
   VITE_API_BASE_URL:
-    getEnv("VITE_API_BASE_URL", "http://localhost:3000"),
+    getEnv("VITE_API_BASE_URL", "https://boreal-staff-server-e4hmaqbkb2g5hgfv.canadacentral-01.azurewebsites.net"),
 };

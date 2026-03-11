@@ -1,6 +1,7 @@
 import { logClientError } from "./logger";
+import API_BASE from "./apiBase";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+const baseURL = API_BASE;
 
 export class ApiError extends Error {
   constructor(
