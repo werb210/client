@@ -7,5 +7,5 @@ const getEnv = (key: string, fallback?: string) => {
 
 export const ENV = {
   VITE_API_BASE_URL:
-    getEnv("VITE_API_BASE_URL", "https://api.boreal.financial"),
+    getEnv("VITE_API_BASE_URL", "https://api.staff.boreal.financial"),
 };

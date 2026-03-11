@@ -25,7 +25,7 @@ import ChatSupportWidget from "@/components/ChatSupportWidget";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { useReadinessBridge } from "@/hooks/useReadinessBridge";
 import { apiRequest } from "@/services/api";
-import API_BASE from "@/lib/apiBase";
+import { apiUrl } from "@/config/api";
 import { endCall } from "@/services/voiceService";
 import { fetchVoiceToken } from "@/api/voice";
 import { initializeClientVoice } from "@/telephony/services/clientVoice";
@@ -177,7 +177,7 @@ export default function App() {
 
     if (!session) return;
 
-    void apiRequest(`${API_BASE}/api/credit-readiness/session/${session}`)
+    void apiRequest(apiUrl(`/api/credit-readiness/session/${session}`))
       .then((data) => {
         localStorage.setItem("creditPrefill", JSON.stringify(data));
       })
