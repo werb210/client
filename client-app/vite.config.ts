@@ -5,8 +5,9 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   build: {
-    sourcemap: false,
-    minify: "esbuild",
+    sourcemap: true,
+    minify: false,
+    target: "es2020",
   },
   esbuild: {
     drop: process.env.NODE_ENV === "production" ? ["console", "debugger"] : [],
