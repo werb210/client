@@ -11,6 +11,14 @@ import { loadLocalBackup, useLocalBackup } from "../system/useLocalBackup";
 import { buildApiUrl } from "../lib/api";
 import { apiRequest } from "@/services/api";
 
+const emptyApplicationDraft = {
+  borrower: {},
+  company: {},
+  financials: {},
+  application: {},
+  documents: [],
+};
+
 const emptyApp: ApplicationData = {
   applicationDraft: emptyApplicationDraft,
   kyc: {},
@@ -47,13 +55,7 @@ const emptyApp: ApplicationData = {
 };
 
 
-const emptyApplicationDraft = {
-  borrower: {},
-  company: {},
-  financials: {},
-  application: {},
-  documents: [],
-};
+
 
 function buildApplicationDraft(source: ApplicationData) {
   const docs = Object.entries(source.documents || {}).map(([type, value]) => ({
