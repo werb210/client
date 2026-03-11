@@ -9,6 +9,7 @@ import {
 import { OfflineStore } from "../state/offline";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { SessionGuard } from "../auth/sessionGuard";
+import { getOtpSession } from "../auth/session";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { useClientSession } from "../hooks/useClientSession";
 import { useApplicationStore } from "../state/useApplicationStore";
@@ -84,6 +85,12 @@ function RequirePortalSession({ children }: GuardProps): JSX.Element {
     return <Navigate to="/portal" replace />;
   }
 
+  return children;
+}
+
+function RequireOTP({ children }: GuardProps): JSX.Element {
+  const session = getOtpSession();
+  if (!session) return <Navigate to="/otp" replace />;
   return children;
 }
 
@@ -193,6 +200,7 @@ export default function AppRouter(): JSX.Element {
         <Routes>
           <Route path="/" element={<Navigate to="/apply" replace />} />
           <Route path="/portal" element={<PortalEntry />} />
+          <Route path="/otp" element={<PortalEntry />} />
           <Route path="/expired" element={<SessionExpiredPage />} />
           <Route path="/revoked" element={<SessionRevokedPage />} />
           <Route path="/system-status" element={<SystemStatus />} />
@@ -219,51 +227,80 @@ export default function AppRouter(): JSX.Element {
           <Route path="/apply/success" element={<PublicApplySuccessPage />} />
           <Route path="/apply/confirmation" element={<ConfirmationPage />} />
 
-          <Route path="/apply">
-            <Route index element={<PublicApplyPage />} />
-            <Route path="step-1" element={<Step1 />} />
-            <Route
-              path="step-2"
-              element={
+          <Route
+            path="/apply"
+            element={
+              <RequireOTP>
+                <PublicApplyPage />
+              </RequireOTP>
+            }
+          />
+          <Route
+            path="/apply/step-1"
+            element={
+              <RequireOTP>
+                <Step1 />
+              </RequireOTP>
+            }
+          />
+          <Route
+            path="/apply/step-2"
+            element={
+              <RequireOTP>
                 <RequireApplicationToken>
                   <Step2 />
                 </RequireApplicationToken>
-              }
-            />
-            <Route
-              path="step-3"
-              element={
+              </RequireOTP>
+            }
+          />
+          <Route
+            path="/apply/step-3"
+            element={
+              <RequireOTP>
                 <RequireApplicationToken>
                   <Step3 />
                 </RequireApplicationToken>
-              }
-            />
-            <Route
-              path="step-4"
-              element={
+              </RequireOTP>
+            }
+          />
+          <Route
+            path="/apply/step-4"
+            element={
+              <RequireOTP>
                 <RequireApplicationToken>
                   <Step4 />
                 </RequireApplicationToken>
-              }
-            />
-            <Route
-              path="step-5"
-              element={
+              </RequireOTP>
+            }
+          />
+          <Route
+            path="/apply/step-5"
+            element={
+              <RequireOTP>
                 <RequireApplicationToken>
                   <Step5 />
                 </RequireApplicationToken>
-              }
-            />
-            <Route
-              path="step-6"
-              element={
+              </RequireOTP>
+            }
+          />
+          <Route
+            path="/apply/step-6"
+            element={
+              <RequireOTP>
                 <RequireApplicationToken>
                   <Step6 />
                 </RequireApplicationToken>
-              }
-            />
-          </Route>
-          <Route path="/apply/:applicationId/*" element={<ApplyPage />} />
+              </RequireOTP>
+            }
+          />
+          <Route
+            path="/apply/:applicationId/*"
+            element={
+              <RequireOTP>
+                <ApplyPage />
+              </RequireOTP>
+            }
+          />
 
           <Route path="/application/step-:step" element={<Navigate to="/apply/step-1" />} />
 
