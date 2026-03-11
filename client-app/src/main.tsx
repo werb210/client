@@ -21,29 +21,32 @@ window.addEventListener("online", () => {
 
 async function bootstrapContinuation() {
   try {
-    const continuation = await fetchApplicationContinuation();
+    if (!sessionStorage.getItem("continuation_checked")) {
+      sessionStorage.setItem("continuation_checked", "true");
+      const continuation = await fetchApplicationContinuation();
 
-    if (!continuation?.exists) {
-      if (window.location.pathname === "/") {
-        window.location.replace("/apply");
+      if (!continuation?.exists) {
+        if (window.location.pathname === "/") {
+          window.location.replace("/apply");
+        }
+        return;
       }
-      return;
-    }
 
-    const step = Math.max(1, Math.min(6, Number(continuation.step) || 1));
-    const applicationId = continuation.applicationId || "";
-    if (!applicationId) return;
+      const step = Math.max(1, Math.min(6, Number(continuation.step) || 1));
+      const applicationId = continuation.applicationId || "";
+      if (!applicationId) return;
 
-    window.__APP_CONTINUATION__ = {
-      applicationId,
-      step,
-      data: continuation.data || {},
-    };
+      window.__APP_CONTINUATION__ = {
+        applicationId,
+        step,
+        data: continuation.data || {},
+      };
 
-    const targetPath = `/application/step-${step}`;
-    if (window.location.pathname !== targetPath) {
-      window.location.replace(targetPath);
-      return;
+      const targetPath = `/application/step-${step}`;
+      if (window.location.pathname !== targetPath) {
+        window.location.replace(targetPath);
+        return;
+      }
     }
   } catch (error: unknown) {
     const status = error?.response?.status;
