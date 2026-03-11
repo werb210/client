@@ -3,12 +3,18 @@
     "rewrite": "/index.html",
     "exclude": [
       "/assets/*",
+      "/images/*",
+      "/icons/*",
+      "/manifest.webmanifest",
+      "/sw.js",
       "/*.css",
       "/*.js",
       "/*.png",
       "/*.jpg",
+      "/*.jpeg",
       "/*.svg",
-      "/*.ico"
+      "/*.ico",
+      "/*.webmanifest"
     ]
   }
 }

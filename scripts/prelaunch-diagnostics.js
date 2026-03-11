@@ -9,7 +9,7 @@ const requiredEnv = [
   'VITE_OPENAI_ASSISTANT_ID',
 ];
 
-const apiBase = process.env.VITE_API_BASE_URL || process.env.API_BASE_URL || 'http://localhost:3000';
+const apiBase = process.env.VITE_API_BASE_URL || process.env.API_BASE_URL || 'https://boreal-staff-server-e4hmaqbkb2g5hgfv.canadacentral-01.azurewebsites.net';
 const staffHealth = `${apiBase.replace(/\/$/, '')}/health`;
 const uploadEndpoint = `${apiBase.replace(/\/$/, '')}/api/client/app/upload-document/diagnostic`;
 const chatEndpoint = `${apiBase.replace(/\/$/, '')}/api/client/app/messages/diagnostic`;
