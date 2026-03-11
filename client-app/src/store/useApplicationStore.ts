@@ -16,8 +16,7 @@ export interface ApplicationStore {
 }
 
 /*
-IMPORTANT
-This must be defined BEFORE the Zustand store
+Define BEFORE store creation to avoid runtime reference error
 */
 const emptyApplicationDraft: ApplicationDraft = {
   businessName: "",
