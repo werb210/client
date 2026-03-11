@@ -1,5 +1,6 @@
 const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://boreal-staff-server-e4hmaqbkb2g5hgfv.canadacentral-01.azurewebsites.net";
+  import.meta.env.PROD
+    ? "https://api.boreal.financial"
+    : "http://localhost:3000";
 
 export default API_BASE;
