@@ -1,7 +1,5 @@
 import { logClientError } from "./logger";
-import API_BASE from "./apiBase";
-
-const baseURL = API_BASE;
+import { apiUrl } from "@/config/api";
 
 export class ApiError extends Error {
   constructor(
@@ -17,8 +15,7 @@ export function buildApiUrl(path: string) {
   if (/^https?:\/\//.test(path)) {
     return path;
   }
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${baseURL}${normalizedPath}`;
+  return apiUrl(path);
 }
 
 
