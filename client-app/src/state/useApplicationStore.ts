@@ -10,14 +10,7 @@ import { getSessionId, trackEvent } from "../utils/analytics";
 import { loadLocalBackup, useLocalBackup } from "../system/useLocalBackup";
 import { buildApiUrl } from "../lib/api";
 import { apiRequest } from "@/services/api";
-
-const emptyApplicationDraft = {
-  borrower: {},
-  company: {},
-  financials: {},
-  application: {},
-  documents: [],
-};
+import { emptyApplicationDraft } from "../constants/applicationDraft";
 
 const emptyApp: ApplicationData = {
   applicationDraft: emptyApplicationDraft,
