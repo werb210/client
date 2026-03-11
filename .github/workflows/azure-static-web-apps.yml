@@ -1,17 +1,4 @@
-REPO: BF-client
-
-OBJECTIVE
-Repair the Azure Static Web App deployment pipeline so the build actually deploys.
-
-TASKS
-
-1. Open the workflow file
-
-.github/workflows/azure-static-web-apps.yml
-
-2. Replace the entire file with:
-
-name: Azure Static Web Apps CI/CD
+name: Azure Static Web App Deploy
 
 on:
   push:
@@ -24,11 +11,14 @@ on:
 
 jobs:
   build_and_deploy:
+    if: github.event_name == 'push' || github.event.action != 'closed'
     runs-on: ubuntu-latest
+
     name: Build and Deploy
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -36,22 +26,20 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          cd client-app
+          npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Build client
+        run: |
+          cd client-app
+          npm run build
 
-      - name: Deploy
+      - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: upload
-          app_location: "/"
+          action: "upload"
+          app_location: "client-app"
           output_location: "dist"
-
-3. Commit
-
-git add .
-git commit -m "fix(ci): repair azure static web app deployment"
-git push
