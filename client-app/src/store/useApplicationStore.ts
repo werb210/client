@@ -1,42 +1,41 @@
-import { create } from "zustand";
+import { create } from "zustand"
 
 export type ApplicationDraft = {
-  businessName: string;
-  contactName: string;
-  email: string;
-  phone: string;
-  requestedAmount: number | null;
-  productType: string | null;
-};
+  businessName?: string
+  legalName?: string
+  phone?: string
+  email?: string
+  industry?: string
+  revenue?: number
+  requestedAmount?: number
+}
 
 export const emptyApplicationDraft: ApplicationDraft = {
   businessName: "",
-  contactName: "",
-  email: "",
+  legalName: "",
   phone: "",
-  requestedAmount: null,
-  productType: null,
-};
+  email: "",
+  industry: "",
+  revenue: 0,
+  requestedAmount: 0
+}
 
-type ApplicationState = {
-  draft: ApplicationDraft;
-  setDraft: (data: Partial<ApplicationDraft>) => void;
-  resetDraft: () => void;
-};
+type ApplicationStore = {
+  draft: ApplicationDraft
+  setDraft: (partial: Partial<ApplicationDraft>) => void
+  resetDraft: () => void
+}
 
-export const useApplicationStore = create<ApplicationState>((set) => ({
+export const useApplicationStore = create<ApplicationStore>((set) => ({
   draft: emptyApplicationDraft,
 
-  setDraft: (data) =>
+  setDraft: (partial) =>
     set((state) => ({
-      draft: {
-        ...state.draft,
-        ...data,
-      },
+      draft: { ...state.draft, ...partial }
     })),
 
   resetDraft: () =>
     set({
-      draft: emptyApplicationDraft,
-    }),
-}));
+      draft: emptyApplicationDraft
+    })
+}))
