@@ -7,7 +7,8 @@ import "./styles/pwa.css";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { validateEnv } from "./config/env";
 import { clearClientStorage } from "./auth/logout";
-import { fetchApplicationContinuation } from "./api/applicationProgress";
+import { bootstrapContinuation } from "./api/applicationProgress";
+import { getOtpSession } from "./auth/session";
 import { processQueue } from "./lib/uploadQueue";
 import { initializeVoice } from "./telephony/services/voiceDevice";
 
@@ -19,34 +20,31 @@ window.addEventListener("online", () => {
   void processQueue();
 });
 
-async function bootstrapContinuation() {
+async function hydrateContinuation() {
   try {
-    if (!sessionStorage.getItem("continuation_checked")) {
-      sessionStorage.setItem("continuation_checked", "true");
-      const continuation = await fetchApplicationContinuation();
+    const continuation = await bootstrapContinuation();
 
-      if (!continuation?.exists) {
-        if (window.location.pathname === "/") {
-          window.location.replace("/apply");
-        }
-        return;
+    if (!continuation?.exists) {
+      if (window.location.pathname === "/") {
+        window.location.replace("/apply");
       }
+      return;
+    }
 
-      const step = Math.max(1, Math.min(6, Number(continuation.step) || 1));
-      const applicationId = continuation.applicationId || "";
-      if (!applicationId) return;
+    const step = Math.max(1, Math.min(6, Number(continuation.step) || 1));
+    const applicationId = continuation.applicationId || "";
+    if (!applicationId) return;
 
-      window.__APP_CONTINUATION__ = {
-        applicationId,
-        step,
-        data: continuation.data || {},
-      };
+    window.__APP_CONTINUATION__ = {
+      applicationId,
+      step,
+      data: continuation.data || {},
+    };
 
-      const targetPath = `/application/step-${step}`;
-      if (window.location.pathname !== targetPath) {
-        window.location.replace(targetPath);
-        return;
-      }
+    const targetPath = `/application/step-${step}`;
+    if (window.location.pathname !== targetPath) {
+      window.location.replace(targetPath);
+      return;
     }
   } catch (error: unknown) {
     const status = error?.response?.status;
@@ -62,17 +60,22 @@ async function bootstrapContinuation() {
   }
 }
 
-void bootstrapContinuation().finally(() => {
-  void initializeVoice("client_user");
-  ReactDOM.createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
+const otpSession = getOtpSession();
 
-});
+if (!otpSession) {
+  window.location.href = "/otp";
+} else {
+  void hydrateContinuation().finally(() => {
+    void initializeVoice("client_user");
+    ReactDOM.createRoot(document.getElementById("root")!).render(
+      <React.StrictMode>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </React.StrictMode>
+    );
+  });
+}
 
 
 if (!import.meta.env.PROD && "serviceWorker" in navigator) {

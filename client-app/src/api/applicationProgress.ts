@@ -1,5 +1,13 @@
 import api from "@/lib/api";
 
+export async function bootstrapContinuation() {
+  if (sessionStorage.getItem("continuation_checked")) return;
+
+  sessionStorage.setItem("continuation_checked", "true");
+
+  return fetchApplicationContinuation();
+}
+
 export interface SaveApplicationStepPayload {
   applicationId: string;
   step: number;
