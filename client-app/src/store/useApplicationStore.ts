@@ -1,29 +1,31 @@
 import { create } from "zustand"
 
-export type ApplicationDraft = {
+export interface ApplicationDraft {
   businessName?: string
-  legalName?: string
-  phone?: string
-  email?: string
+  businessType?: string
   industry?: string
-  revenue?: number
+  yearsInBusiness?: string
   requestedAmount?: number
+  useOfFunds?: string
 }
 
-export const emptyApplicationDraft: ApplicationDraft = {
-  businessName: "",
-  legalName: "",
-  phone: "",
-  email: "",
-  industry: "",
-  revenue: 0,
-  requestedAmount: 0
-}
-
-type ApplicationStore = {
+export interface ApplicationStore {
   draft: ApplicationDraft
   setDraft: (partial: Partial<ApplicationDraft>) => void
   resetDraft: () => void
+}
+
+/*
+IMPORTANT
+This must be defined BEFORE the Zustand store
+*/
+const emptyApplicationDraft: ApplicationDraft = {
+  businessName: "",
+  businessType: "",
+  industry: "",
+  yearsInBusiness: "",
+  requestedAmount: 0,
+  useOfFunds: ""
 }
 
 export const useApplicationStore = create<ApplicationStore>((set) => ({
@@ -31,7 +33,10 @@ export const useApplicationStore = create<ApplicationStore>((set) => ({
 
   setDraft: (partial) =>
     set((state) => ({
-      draft: { ...state.draft, ...partial }
+      draft: {
+        ...state.draft,
+        ...partial
+      }
     })),
 
   resetDraft: () =>
