@@ -1,3 +1,3 @@
-import { API_BASE } from "@/config/api";
+import { API_BASE_URL } from "@/config/api";
 
-export default API_BASE;
+export default API_BASE_URL;
