@@ -49,3 +49,9 @@ export async function apiRequest(
 
   return res.json()
 }
+
+const api = {
+  request: apiRequest
+}
+
+export default api
