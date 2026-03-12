@@ -1,10 +1,8 @@
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import apiClient from "@/lib/apiClient";
+import { ENV } from "../config/env";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://server.boreal.financial";
+const API_BASE_URL = ENV.API_URL;
 
 export function buildApiUrl(path: string): string {
   if (!path) return API_BASE_URL;
