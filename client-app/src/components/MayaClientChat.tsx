@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { QualificationSummary } from "./QualificationSummary";
 import { StartupWaitlistForm } from "./StartupWaitlistForm";
 import { useMayaSession } from "../store/mayaSession";
-import api from "@/lib/api";
+import api from "@/api/client";
 
 type ChatMessage = {
   id: string;

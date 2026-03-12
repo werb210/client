@@ -1,12 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  hangupClientCall,
-  isClientVoiceReady,
-  startClientCall,
-  subscribeToClientCall
-} from "../services/clientVoice";
+import { useRef, useState } from "react";
+import { getVoiceDevice } from "@/telephony/voiceClient";
 
-export type ClientCallStatus = "idle" | "connecting" | "in_call";
+export type ClientCallStatus = "idle" | "connecting" | "connected" | "ended" | "error";
 
 export class ClientCallError extends Error {
   code: "DEVICE_NOT_READY";
@@ -20,48 +15,38 @@ export class ClientCallError extends Error {
 
 export function useClientCall() {
   const [status, setStatus] = useState<ClientCallStatus>("idle");
-  const statusRef = useRef<ClientCallStatus>("idle");
-
-  const updateStatus = (nextStatus: ClientCallStatus) => {
-    statusRef.current = nextStatus;
-    setStatus(nextStatus);
-  };
-
-  useEffect(() => {
-    return subscribeToClientCall((call) => {
-      updateStatus(call ? "in_call" : "idle");
-    });
-  }, []);
+  const activeCallRef = useRef<any>(null);
 
   async function startCall() {
-    if (statusRef.current !== "idle") {
-      return;
-    }
+    if (status === "connecting" || status === "connected") return;
 
-    updateStatus("connecting");
-
-    if (!isClientVoiceReady()) {
-      updateStatus("idle");
+    setStatus("connecting");
+    const device = getVoiceDevice();
+    if (!device) {
+      setStatus("error");
       throw new ClientCallError("Voice device not initialized", "DEVICE_NOT_READY");
     }
 
     try {
-      await startClientCall();
-      updateStatus("in_call");
+      const call = await device.connect({ params: { To: "staff" } });
+      activeCallRef.current = call;
+      setStatus("connected");
+
+      call.on("disconnect", () => {
+        activeCallRef.current = null;
+        setStatus("ended");
+      });
     } catch (error) {
-      updateStatus("idle");
+      setStatus("error");
       throw error;
     }
   }
 
   function hangup() {
-    hangupClientCall();
-    updateStatus("idle");
+    activeCallRef.current?.disconnect?.();
+    activeCallRef.current = null;
+    setStatus("ended");
   }
 
-  return {
-    status,
-    startCall,
-    hangup
-  };
+  return { status, startCall, hangup };
 }

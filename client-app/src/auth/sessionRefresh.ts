@@ -2,7 +2,7 @@ import { ClientProfileStore } from "../state/clientProfiles";
 import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { setSessionRefreshing } from "../state/sessionRefresh";
 import { getActiveClientSessionToken } from "../state/clientSession";
-import { apiRequest } from "../lib/api";
+import { apiRequest } from "../api/client";
 
 let refreshPromise: Promise<boolean> | null = null;
 let refreshFailed = false;

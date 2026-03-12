@@ -1,5 +1,5 @@
 import { validateFile } from "@/utils/fileValidation";
-import { apiRequest } from "./api";
+import { apiRequest } from "@/api/client";
 
 export async function uploadDocument(file: File, applicationId: string) {
   validateFile(file);

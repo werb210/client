@@ -1,4 +1,4 @@
-import { buildApiUrl } from "../lib/api";
+import { buildApiUrl } from "../api/client";
 import type { ReadinessContext } from "../state/readinessStore";
 
 export function getLeadIdFromSearch(search: string) {

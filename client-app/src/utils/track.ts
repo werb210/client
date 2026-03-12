@@ -1,4 +1,4 @@
-import { apiRequest } from "@/services/api";
+import { apiRequest } from "@/api/client";
 
 export function track(event: string, metadata?: unknown): void {
   void apiRequest("/api/support/track", {

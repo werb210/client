@@ -6,7 +6,7 @@ import { PhoneInput } from "../../components/ui/PhoneInput";
 import { Button } from "../../components/ui/Button";
 import { components, layout, tokens } from "@/styles";
 import { createLead } from "@/services/lead";
-import { apiRequest } from "@/lib/api";
+import { apiRequest } from "@/api/client";
 
 type Step4Values = {
   firstName: string;

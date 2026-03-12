@@ -8,8 +8,8 @@ import { clearSubmissionIdempotencyKey } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { getSessionId, trackEvent } from "../utils/analytics";
 import { loadLocalBackup, useLocalBackup } from "../system/useLocalBackup";
-import { buildApiUrl } from "../lib/api";
-import { apiRequest } from "@/services/api";
+import { buildApiUrl } from "../api/client";
+import { apiRequest } from "@/api/client";
 import { emptyApplicationDraft } from "../constants/applicationDraft";
 
 function createEmptyApplication() {

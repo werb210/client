@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const postMock = vi.fn();
 const continuationSessionMock = vi.fn();
 
-vi.mock("@/lib/api", () => ({
+vi.mock("@/api/client", () => ({
   default: {
     post: postMock,
   },

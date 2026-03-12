@@ -1,4 +1,4 @@
-import api from "@/lib/api";
+import api from "@/api/client";
 
 export type LeadPayload = {
   companyName?: string;

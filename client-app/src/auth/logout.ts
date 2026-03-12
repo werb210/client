@@ -3,8 +3,7 @@ import { ClientProfileStore } from "../state/clientProfiles";
 import { OfflineStore } from "../state/offline";
 
 const STORAGE_KEYS_TO_REMOVE = [
-  "portal_auth_token",
-  "client_session_token",
+  "boreal_client_token",
 ] as const;
 
 export async function clearBrowserCaches() {

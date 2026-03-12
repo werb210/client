@@ -1,5 +1,9 @@
-import { ENV } from "../env";
+export function validateEnv() {
+  const required = ["VITE_API_BASE_URL"]
 
-export function validateEnv(): void {}
-
-export const API_BASE_URL = ENV.VITE_API_BASE_URL;
+  required.forEach((key) => {
+    if (!import.meta.env[key]) {
+      console.warn(`Missing environment variable: ${key}`)
+    }
+  })
+}

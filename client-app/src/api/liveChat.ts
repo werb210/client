@@ -1,4 +1,4 @@
-import api from "@/lib/api";
+import api from "@/api/client";
 
 export async function escalateToHuman() {
   await api.post("/ai/escalate");
