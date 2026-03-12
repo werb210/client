@@ -1,9 +1,16 @@
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import apiClient from "@/lib/apiClient";
-import { apiUrl } from "@/config/api";
 
 export function buildApiUrl(path: string) {
-  return apiUrl(path);
+  const base =
+    import.meta.env.VITE_API_URL ||
+    "https://server.boreal.financial"
+
+  if (path.startsWith("http")) {
+    return path
+  }
+
+  return `${base}${path.startsWith("/") ? "" : "/"}${path}`
 }
 
 function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
@@ -28,7 +35,7 @@ function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
 }
 
 function normalizePath(path: string) {
-  return path.startsWith("http") ? path : apiUrl(path);
+  return buildApiUrl(path);
 }
 
 export async function clientApi(path: string, options: RequestInit = {}) {
