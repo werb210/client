@@ -1,35 +1,18 @@
-import axios, {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosProgressEvent,
-} from "axios";
+import axios from "axios"
 
-export interface ApiRequestOptions extends AxiosRequestConfig {
-  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
-}
+const base =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://api.staff.boreal.financial/api"
 
-const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "",
+export const apiClient = axios.create({
+  baseURL: base,
   withCredentials: true,
-});
+  headers: {
+    "Content-Type": "application/json"
+  }
+})
 
-export const api = apiClient;
+export const api = apiClient
 
-export async function apiGet<T = any>(
-  url: string,
-  config?: ApiRequestOptions
-): Promise<T> {
-  const response = await apiClient.get<T>(url, config);
-  return response.data;
-}
-
-export async function apiPost<T = any>(
-  url: string,
-  data?: unknown,
-  config?: ApiRequestOptions
-): Promise<T> {
-  const response = await apiClient.post<T>(url, data, config);
-  return response.data;
-}
-
-export default apiClient;
+export default apiClient

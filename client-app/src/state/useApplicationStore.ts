@@ -12,40 +12,17 @@ import { buildApiUrl } from "../lib/api";
 import { apiRequest } from "@/services/api";
 import { emptyApplicationDraft } from "../constants/applicationDraft";
 
-const emptyApp: ApplicationData = {
-  applicationDraft: emptyApplicationDraft,
-  kyc: {},
-  productCategory: null,
-  matchPercentages: {},
-  eligibleProducts: [],
-  eligibleCategories: [],
-  eligibilityReasons: [],
-  business: {},
-  applicant: {},
-  documents: {},
-  productRequirements: {},
-  documentsDeferred: false,
-  selectedProduct: undefined,
-  selectedProductId: undefined,
-  selectedProductType: undefined,
-  requires_closing_cost_funding: undefined,
-  termsAccepted: false,
-  typedSignature: "",
-  coApplicantSignature: "",
-  signatureDate: "",
-  applicationToken: undefined,
-  continuationToken: undefined,
-  readinessSessionToken: undefined,
-  applicationId: undefined,
-  currentStep: 1,
-  linkedApplicationTokens: [],
-  documentReviewComplete: undefined,
-  financialReviewComplete: undefined,
-  readinessScore: undefined,
-  readinessLeadId: undefined,
-  ocrComplete: undefined,
-  creditSummaryComplete: undefined,
-};
+function createEmptyApplication() {
+  return {
+    applicationDraft: {
+      borrower: {},
+      company: {},
+      financials: {},
+      application: {},
+      documents: []
+    }
+  }
+}
 
 
 
