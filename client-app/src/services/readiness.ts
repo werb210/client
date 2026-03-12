@@ -35,7 +35,7 @@ export async function fetchReadinessContext(
 ): Promise<ReadinessContext | null> {
   try {
     const response = await fetchReadinessWithRetry(
-      buildApiUrl(`/api/public/readiness/${leadId}`),
+      buildApiUrl(`/public/readiness/${leadId}`),
       fetchImpl,
       2
     );
