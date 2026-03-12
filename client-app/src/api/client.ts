@@ -1,17 +1,26 @@
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import apiClient from "@/lib/apiClient";
 
-export function buildApiUrl(path: string) {
-  const base =
-    import.meta.env.VITE_API_URL ||
-    "https://server.boreal.financial"
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://server.boreal.financial";
+
+export function buildApiUrl(path: string): string {
+  if (!path) return API_BASE_URL;
 
   if (path.startsWith("http")) {
-    return path
+    return path;
   }
 
-  return `${base}${path.startsWith("/") ? "" : "/"}${path}`
+  if (path.startsWith("/")) {
+    return `${API_BASE_URL}${path}`;
+  }
+
+  return `${API_BASE_URL}/${path}`;
 }
+
+export { API_BASE_URL };
 
 function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
   const method = options.method || "GET";
