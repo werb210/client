@@ -27,6 +27,7 @@ import { useReadinessBridge } from "@/hooks/useReadinessBridge";
 import { apiRequest } from "@/api/client";
 import { initializeVoice } from "@/telephony/voiceClient";
 import CallUsButton from "@/telephony/components/CallUsButton";
+import { getCallStatus } from "@/services/telephonyService";
 
 export default function App() {
   const { app, loadFromServer, update } = useApplicationStore();
@@ -160,6 +161,7 @@ export default function App() {
 
     void (async () => {
       try {
+        await getCallStatus();
         await initializeVoice("client_user");
       } catch {
         // ignore voice initialization failures
