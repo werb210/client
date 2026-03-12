@@ -1,21 +1,29 @@
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import apiClient from "@/lib/apiClient";
-import { ENV } from "../config/env";
-
-const API_BASE_URL = ENV.API_URL;
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://server.boreal.financial";
 
 export function buildApiUrl(path: string): string {
-  if (!path) return API_BASE_URL;
+  if (!path) {
+    return `${API_BASE_URL}/api`;
+  }
 
   if (path.startsWith("http")) {
     return path;
   }
 
-  if (path.startsWith("/")) {
-    return `${API_BASE_URL}${path}`;
+  let normalized = path;
+
+  if (!normalized.startsWith("/")) {
+    normalized = `/${normalized}`;
   }
 
-  return `${API_BASE_URL}/${path}`;
+  if (!normalized.startsWith("/api")) {
+    normalized = `/api${normalized}`;
+  }
+
+  return `${API_BASE_URL}${normalized}`;
 }
 
 export { API_BASE_URL };
@@ -67,22 +75,25 @@ type ApiResponse<T = unknown> = Promise<AxiosResponse<T>>;
 
 const api = {
   get<T = unknown>(url: string, config?: AxiosRequestConfig): ApiResponse<T> {
-    return apiClient.get<T>(url, config);
+    return apiClient.get<T>(normalizePath(url), config);
   },
   post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): ApiResponse<T> {
-    return apiClient.post<T>(url, data, config);
+    return apiClient.post<T>(normalizePath(url), data, config);
   },
   patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): ApiResponse<T> {
-    return apiClient.patch<T>(url, data, config);
+    return apiClient.patch<T>(normalizePath(url), data, config);
   },
   put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): ApiResponse<T> {
-    return apiClient.put<T>(url, data, config);
+    return apiClient.put<T>(normalizePath(url), data, config);
   },
   delete<T = unknown>(url: string, config?: AxiosRequestConfig): ApiResponse<T> {
-    return apiClient.delete<T>(url, config);
+    return apiClient.delete<T>(normalizePath(url), config);
   },
   request<T = unknown>(config: AxiosRequestConfig): ApiResponse<T> {
-    return apiClient.request<T>(config);
+    return apiClient.request<T>({
+      ...config,
+      url: normalizePath(config.url || ""),
+    });
   }
 };
 
