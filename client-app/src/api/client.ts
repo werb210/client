@@ -1,17 +1,9 @@
-const resolveApiBase = () => {
-  const env = import.meta.env
-
-  if (env && env.VITE_API_URL) {
-    return env.VITE_API_URL
-  }
-
-  return "https://api.staff.boreal.financial"
-}
-
-const API_BASE = resolveApiBase()
+import { API_BASE } from "../config/apiBase"
 
 export async function clientApi(path: string, options: RequestInit = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`
+
+  const res = await fetch(url, {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
