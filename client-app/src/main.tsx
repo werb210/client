@@ -6,12 +6,11 @@ import "./styles/global.css";
 import "./styles/pwa.css";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { validateEnv } from "./config/env";
+import { loadRuntimeConfig } from "./config/runtimeConfig";
 import { clearClientStorage } from "./auth/logout";
 import { bootstrapContinuation } from "./api/applicationProgress";
 import { getAccessToken } from "./services/token";
 import { processQueue } from "./lib/uploadQueue";
-
-validateEnv();
 
 window.addEventListener("online", () => {
   void processQueue();
@@ -57,19 +56,25 @@ async function hydrateContinuation() {
   }
 }
 
-const accessToken = getAccessToken();
-const bootstrapPromise = accessToken ? hydrateContinuation() : Promise.resolve();
+async function start() {
+  await loadRuntimeConfig();
+  validateEnv();
 
-void bootstrapPromise.finally(() => {
-  ReactDOM.createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
-});
+  const accessToken = getAccessToken();
+  const bootstrapPromise = accessToken ? hydrateContinuation() : Promise.resolve();
 
+  void bootstrapPromise.finally(() => {
+    ReactDOM.createRoot(document.getElementById("root")!).render(
+      <React.StrictMode>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </React.StrictMode>
+    );
+  });
+}
+
+void start();
 
 if (!import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {

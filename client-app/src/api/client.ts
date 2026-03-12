@@ -1,10 +1,10 @@
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import apiClient from "@/lib/apiClient";
-import { API_BASE_URL, apiRequest as request, apiUrl } from "./request";
+import { apiRequest as request, apiUrl, getApiBaseUrl } from "./request";
 
 export function buildApiUrl(path: string): string {
   if (!path) {
-    return `${API_BASE_URL}/api`;
+    return `${getApiBaseUrl()}/api`;
   }
 
   if (path.startsWith("http")) {
@@ -13,8 +13,6 @@ export function buildApiUrl(path: string): string {
 
   return apiUrl(path);
 }
-
-export { API_BASE_URL };
 
 function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
   const method = options.method || "GET";

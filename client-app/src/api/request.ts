@@ -1,6 +1,9 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://server.boreal.financial";
+import { getRuntimeConfig } from "../config/runtimeConfig";
+
+function getApiOrigin() {
+  const { API_URL } = getRuntimeConfig();
+  return API_URL.replace(/\/$/, "");
+}
 
 function normalizeApiPath(path: string) {
   let normalized = path;
@@ -17,7 +20,7 @@ function normalizeApiPath(path: string) {
 }
 
 export function apiUrl(path: string) {
-  return `${API_BASE_URL}${normalizeApiPath(path)}`;
+  return `${getApiOrigin()}${normalizeApiPath(path)}`;
 }
 
 export function apiRequest(path: string, options: RequestInit = {}) {
@@ -33,4 +36,6 @@ export function apiRequest(path: string, options: RequestInit = {}) {
   });
 }
 
-export { API_BASE_URL };
+export function getApiBaseUrl() {
+  return getApiOrigin();
+}
