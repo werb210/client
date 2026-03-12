@@ -3,13 +3,17 @@ import { Device } from "@twilio/voice-sdk";
 let device: Device | null = null;
 
 export async function initializeVoice(identity: string) {
-  const res = await fetch("/telephony/token", {
+  const res = await fetch("/api/voice/token", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ identity }),
   });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch voice token: ${res.status}`);
+  }
 
   const { token } = await res.json();
 
