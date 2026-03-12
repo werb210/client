@@ -67,7 +67,7 @@ export function isClientVoiceReady() {
   return device !== null;
 }
 
-export async function initializeClientVoice(token: string) {
+export async function initializeClientVoice(token: string | null) {
   if (device) {
     return;
   }
@@ -76,23 +76,35 @@ export async function initializeClientVoice(token: string) {
     return initializePromise;
   }
 
+  if (!token) {
+    console.warn("Voice disabled: no token available");
+    return;
+  }
+
   initializePromise = (async () => {
-    device = new Device(token);
+    try {
+      device = new Device(token, {
+        logLevel: 1,
+      });
 
-    device.on("registered", () => {
-      /* device ready */
-    });
+      device.on("registered", () => {
+        console.log("Twilio device registered");
+      });
 
-    device.on("incoming", (call: Call) => {
-      setActiveCall(call);
-      call.accept();
-    });
+      device.on("incoming", (call: Call) => {
+        setActiveCall(call);
+        call.accept();
+      });
 
-    device.on("error", () => {
-      /* device error handled upstream */
-    });
+      (device as any).on("error", (err: unknown) => {
+        console.warn("Twilio device error:", err);
+      });
 
-    await device.register();
+      await device.register();
+    } catch (err) {
+      console.warn("Voice initialization failed:", err);
+      device = null;
+    }
   })();
 
   try {
