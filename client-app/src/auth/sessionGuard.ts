@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { OfflineStore } from "../state/offline";
@@ -6,15 +6,13 @@ import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { clearClientStorage } from "./logout";
 import { refreshSessionOnce } from "./sessionRefresh";
 
-const SESSION_GUARD_KEY = "boreal_session_guard_reloaded";
+export type SessionGuardAction = "noop" | "redirect";
 
 type StorageLike = {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
   removeItem(key: string): void;
 };
-
-export type SessionGuardAction = "noop" | "reload" | "redirect";
 
 export function getSessionToken() {
   const cookieToken = document.cookie
@@ -27,57 +25,17 @@ export function getSessionToken() {
   return localStorage.getItem("bf_application_token");
 }
 
-function getSessionStorage(): StorageLike | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.sessionStorage;
-  } catch {
-    return null;
-  }
-}
-
-function markReloaded(storage: StorageLike | null): void {
-  if (!storage) return;
-  try {
-    storage.setItem(SESSION_GUARD_KEY, "true");
-  } catch {
-    // ignore storage failures
-  }
-}
-
-function clearReloadMarker(storage: StorageLike | null): void {
-  if (!storage) return;
-  try {
-    storage.removeItem(SESSION_GUARD_KEY);
-  } catch {
-    // ignore storage failures
-  }
-}
-
 export function resolveSessionGuardAction(options: {
   isOffline: boolean;
   hasAuth: boolean;
   storage?: StorageLike | null;
 }): SessionGuardAction {
-  const storage = options.storage ?? null;
-
   if (options.isOffline) {
     return "noop";
   }
 
   if (options.hasAuth) {
-    clearReloadMarker(storage);
     return "noop";
-  }
-
-  if (!storage) {
-    return "redirect";
-  }
-
-  const hasReloaded = storage.getItem(SESSION_GUARD_KEY) === "true";
-  if (!hasReloaded) {
-    markReloaded(storage);
-    return "reload";
   }
 
   return "redirect";
@@ -110,6 +68,7 @@ export function useSessionGuard(): void {
   const location = useLocation();
   const navigate = useNavigate();
   const { isOffline } = useNetworkStatus();
+  const [ready, setReady] = useState(false);
   const lastRefreshAt = useRef(0);
 
   const guard = useMemo(
@@ -118,23 +77,22 @@ export function useSessionGuard(): void {
   );
 
   useEffect(() => {
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+
     const action = resolveSessionGuardAction({
       isOffline,
       hasAuth: guard.hasAuth,
-      storage: getSessionStorage(),
     });
-
-    if (action === "reload") {
-      if (typeof window === "undefined") return;
-      window.location.reload();
-      return;
-    }
 
     if (action === "redirect" && guard.redirectTo) {
       clearClientStorage();
       navigate(guard.redirectTo, { replace: true });
     }
-  }, [guard.hasAuth, guard.redirectTo, isOffline, navigate]);
+  }, [guard.hasAuth, guard.redirectTo, isOffline, navigate, ready]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

@@ -1,6 +1,8 @@
+import { getAccessToken } from "@/services/token";
+
 export function getOtpSession(): string | null {
   try {
-    return sessionStorage.getItem("boreal_portal_session_token");
+    return getAccessToken();
   } catch {
     return null;
   }

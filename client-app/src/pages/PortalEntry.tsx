@@ -10,6 +10,7 @@ import { formatPhoneNumber, getCountryCode } from "../utils/location";
 import { resolveOtpNextStep } from "../auth/otp";
 import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
+import { getAccessToken } from "@/services/token";
 
 export function PortalEntry() {
   const navigate = useNavigate();
@@ -26,6 +27,13 @@ export function PortalEntry() {
       setPhone(lastPhone);
     }
   }, []);
+
+  useEffect(() => {
+    const token = getAccessToken();
+    if (token) {
+      navigate(`/status?token=${token}`, { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     if (phoneError || otpError) {

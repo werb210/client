@@ -19,23 +19,17 @@ function createStorage(initial: Record<string, string> = {}) {
 }
 
 describe("session guard", () => {
-  it("reloads once when auth is missing", () => {
+  it("redirects when auth is missing", () => {
     const storage = createStorage();
     const first = resolveSessionGuardAction({
       isOffline: false,
       hasAuth: false,
       storage,
     });
-    const second = resolveSessionGuardAction({
-      isOffline: false,
-      hasAuth: false,
-      storage,
-    });
-    expect(first).toBe("reload");
-    expect(second).toBe("redirect");
+    expect(first).toBe("redirect");
   });
 
-  it("clears reload marker when auth is restored", () => {
+  it("stays idle when auth is restored", () => {
     const storage = createStorage({ boreal_session_guard_reloaded: "true" });
     const action = resolveSessionGuardAction({
       isOffline: false,
@@ -43,7 +37,7 @@ describe("session guard", () => {
       storage,
     });
     expect(action).toBe("noop");
-    expect(storage.getItem("boreal_session_guard_reloaded")).toBeNull();
+    expect(storage.getItem("boreal_session_guard_reloaded")).toBe("true");
   });
 });
 
