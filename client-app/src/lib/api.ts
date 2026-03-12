@@ -1,13 +1,11 @@
 import axios, { type AxiosRequestConfig } from "axios"
+import { API_BASE_URL } from "@/config/api"
 
-const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://api.staff.boreal.financial/api"
+const API_BASE = API_BASE_URL
 
 export function buildApiUrl(path: string) {
-  if (!path.startsWith("/")) path = "/" + path
-  return API_BASE + path
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`
+  return `${API_BASE}${normalizedPath}`
 }
 
 const api = axios.create({
@@ -35,7 +33,7 @@ export async function apiRequest<T = unknown>(
   }
 
   const response = await api.request<T>({
-    url: path.startsWith("http") ? path : path,
+    url: path,
     method,
     headers,
     data

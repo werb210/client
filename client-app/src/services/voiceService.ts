@@ -1,5 +1,5 @@
 import { Call, Device } from "@twilio/voice-sdk";
-import { apiRequest } from "./api";
+import { apiUrl } from "@/config/api";
 
 let device: Device | null = null;
 let activeCall: Call | null = null;
@@ -21,28 +21,50 @@ export function subscribe(listener: (nextState: CallState) => void) {
 }
 
 export async function initVoice(identity: string) {
-  const data = await apiRequest<{ token: string }>("/api/telephony/token", {
-    method: "POST",
-    body: JSON.stringify({ identity }),
-  });
+  try {
+    const response = await fetch(
+      apiUrl(`/api/voice/token?identity=${encodeURIComponent(identity)}`),
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
 
-  device = new Device(data.token);
+    if (!response.ok) {
+      console.warn("Voice token request failed:", response.status);
+      return null;
+    }
 
-  device.on("incoming", (call) => {
-    activeCall = call;
+    const data = (await response.json()) as { token?: string };
 
-    call.on("accept", () => notify("connected"));
-    call.on("disconnect", () => {
-      activeCall = null;
-      notify("ended");
+    if (!data.token) {
+      return null;
+    }
+
+    device = new Device(data.token);
+
+    device.on("incoming", (call) => {
+      activeCall = call;
+
+      call.on("accept", () => notify("connected"));
+      call.on("disconnect", () => {
+        activeCall = null;
+        notify("ended");
+      });
+      call.on("error", () => {
+        activeCall = null;
+        notify("error");
+      });
+
+      call.accept();
     });
-    call.on("error", () => {
-      activeCall = null;
-      notify("error");
-    });
 
-    call.accept();
-  });
+    await device.register();
+    return device;
+  } catch (error) {
+    console.warn("Voice initialization failed:", error);
+    return null;
+  }
 }
 
 export function getDevice() {

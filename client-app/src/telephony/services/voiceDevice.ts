@@ -1,25 +1,35 @@
 import { Device } from "@twilio/voice-sdk";
-import { API_BASE } from "../../config/api";
+import { apiUrl } from "../../config/api";
 
 let device: Device | null = null;
 
 export async function initializeVoice(identity: string) {
-  const res = await fetch(
-    `${API_BASE}/api/voice/token?identity=${encodeURIComponent(identity)}`
-  );
+  try {
+    const res = await fetch(
+      apiUrl(`/api/voice/token?identity=${encodeURIComponent(identity)}`),
+      {
+        credentials: "include",
+      }
+    );
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch voice token: ${res.status}`);
+    if (!res.ok) {
+      console.warn(`Failed to fetch voice token: ${res.status}`);
+      return null;
+    }
+
+    const { token } = await res.json();
+
+    device = new Device(token, {
+      codecPreferences: ["opus", "pcmu"],
+      closeProtection: true,
+    } as any);
+
+    await device.register();
+    return device;
+  } catch (error) {
+    console.warn("Voice initialization failed:", error);
+    return null;
   }
-
-  const { token } = await res.json();
-
-  device = new Device(token, {
-    codecPreferences: ["opus", "pcmu"],
-    closeProtection: true,
-  } as any);
-
-  device.register();
 }
 
 export function getDevice() {
