@@ -1,40 +1,20 @@
+import { apiClient } from "@/lib/apiClient";
+
 export type ApiResult<T extends Record<string, any>> = Promise<T>;
 
-async function request<T extends Record<string, any>>(
-  url: string,
-  method: "GET" | "POST" | "PATCH",
-  body?: unknown,
-  options?: RequestInit
-): Promise<T> {
-  const res = await fetch(url, {
-    ...options,
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options?.headers ?? {})
-    },
-    body: body !== undefined ? JSON.stringify(body) : undefined
-  });
-
-  if (!res.ok) {
-    throw new Error(`API request failed: ${res.status}`);
-  }
-
-  const data: unknown = await res.json();
-
-  return data as T;
-}
-
 export const api = {
-  get<T extends Record<string, any>>(url: string, options?: RequestInit) {
-    return request<T>(url, "GET", undefined, options);
+  async get<T extends Record<string, any>>(url: string) {
+    const res = await apiClient.get<T>(url);
+    return res.data;
   },
 
-  post<T extends Record<string, any>>(url: string, body?: unknown, options?: RequestInit) {
-    return request<T>(url, "POST", body, options);
+  async post<T extends Record<string, any>>(url: string, body?: unknown) {
+    const res = await apiClient.post<T>(url, body);
+    return res.data;
   },
 
-  patch<T extends Record<string, any>>(url: string, body?: unknown, options?: RequestInit) {
-    return request<T>(url, "PATCH", body, options);
+  async patch<T extends Record<string, any>>(url: string, body?: unknown) {
+    const res = await apiClient.patch<T>(url, body);
+    return res.data;
   }
 };
