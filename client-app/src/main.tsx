@@ -8,7 +8,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { validateEnv } from "./config/env";
 import { clearClientStorage } from "./auth/logout";
 import { bootstrapContinuation } from "./api/applicationProgress";
-import { getOtpSession } from "./auth/session";
+import { getAccessToken } from "./services/token";
 import { processQueue } from "./lib/uploadQueue";
 import { initializeVoice } from "./telephony/services/voiceDevice";
 
@@ -60,22 +60,19 @@ async function hydrateContinuation() {
   }
 }
 
-const otpSession = getOtpSession();
+const accessToken = getAccessToken();
+const bootstrapPromise = accessToken ? hydrateContinuation() : Promise.resolve();
 
-if (!otpSession) {
-  window.location.href = "/otp";
-} else {
-  void hydrateContinuation().finally(() => {
-    void initializeVoice("client_user");
-    ReactDOM.createRoot(document.getElementById("root")!).render(
-      <React.StrictMode>
-        <ErrorBoundary>
-          <App />
-        </ErrorBoundary>
-      </React.StrictMode>
-    );
-  });
-}
+void bootstrapPromise.finally(() => {
+  void initializeVoice("client_user");
+  ReactDOM.createRoot(document.getElementById("root")!).render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </React.StrictMode>
+  );
+});
 
 
 if (!import.meta.env.PROD && "serviceWorker" in navigator) {
