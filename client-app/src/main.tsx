@@ -10,7 +10,6 @@ import { clearClientStorage } from "./auth/logout";
 import { bootstrapContinuation } from "./api/applicationProgress";
 import { getAccessToken } from "./services/token";
 import { processQueue } from "./lib/uploadQueue";
-import { initializeVoice } from "./telephony/services/voiceDevice";
 
 if (import.meta.env.PROD) {
   validateEnv();
@@ -64,7 +63,6 @@ const accessToken = getAccessToken();
 const bootstrapPromise = accessToken ? hydrateContinuation() : Promise.resolve();
 
 void bootstrapPromise.finally(() => {
-  void initializeVoice("client_user");
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
       <ErrorBoundary>

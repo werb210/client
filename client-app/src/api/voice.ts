@@ -1,12 +1,14 @@
-export async function getVoiceToken(): Promise<string | null> {
+import { apiUrl } from "@/config/api";
+
+export async function getVoiceToken(identity?: string): Promise<string | null> {
   try {
-    const res = await fetch(
-      "https://api.staff.boreal.financial/api/voice/token",
-      {
-        method: "GET",
-        credentials: "include",
-      }
-    );
+    const query = identity
+      ? `?identity=${encodeURIComponent(identity)}`
+      : "";
+    const res = await fetch(apiUrl(`/api/voice/token${query}`), {
+      method: "GET",
+      credentials: "include",
+    });
 
     if (!res.ok) {
       console.warn("Voice token request failed:", res.status);
@@ -22,7 +24,6 @@ export async function getVoiceToken(): Promise<string | null> {
   }
 }
 
-
-export async function fetchVoiceToken(_identity?: string): Promise<string | null> {
-  return getVoiceToken();
+export async function fetchVoiceToken(identity?: string): Promise<string | null> {
+  return getVoiceToken(identity);
 }

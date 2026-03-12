@@ -1,10 +1,19 @@
 import { logClientError } from "@/lib/logger";
+import { apiUrl } from "@/config/api";
+
+function resolveApiRequestUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  return apiUrl(url);
+}
 
 export async function apiRequest<T>(
   url: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(resolveApiRequestUrl(url), {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",

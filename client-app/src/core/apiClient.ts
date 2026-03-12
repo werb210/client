@@ -1,8 +1,9 @@
 import axios from "axios";
 import { generateCorrelationId } from "./correlation";
+import { API_BASE_URL } from "@/config/api";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_SERVER_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
