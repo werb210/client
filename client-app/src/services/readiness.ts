@@ -1,4 +1,4 @@
-import { buildApiUrl } from "../api/client";
+import { apiUrl } from "../api/request";
 import type { ReadinessContext } from "../state/readinessStore";
 
 export function getLeadIdFromSearch(search: string) {
@@ -35,7 +35,7 @@ export async function fetchReadinessContext(
 ): Promise<ReadinessContext | null> {
   try {
     const response = await fetchReadinessWithRetry(
-      buildApiUrl(`/public/readiness/${leadId}`),
+      apiUrl(`/public/readiness/${leadId}`),
       fetchImpl,
       2
     );

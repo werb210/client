@@ -8,7 +8,6 @@ import { clearSubmissionIdempotencyKey } from "../client/submissionIdempotency";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { getSessionId, trackEvent } from "../utils/analytics";
 import { loadLocalBackup, useLocalBackup } from "../system/useLocalBackup";
-import { buildApiUrl } from "../api/client";
 import { apiRequest } from "@/api/client";
 import { emptyApplicationDraft } from "../constants/applicationDraft";
 
@@ -202,7 +201,7 @@ export function useApplicationStore() {
       debounce(async (state: ApplicationData) => {
         if (!state.applicationToken) return;
 
-        await apiRequest(buildApiUrl("/application/update"), {
+        await apiRequest("/application/update", {
           method: "POST",
           body: JSON.stringify(state),
         });

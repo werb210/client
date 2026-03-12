@@ -1,8 +1,6 @@
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import apiClient from "@/lib/apiClient";
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://server.boreal.financial";
+import { API_BASE_URL, apiRequest as request, apiUrl } from "./request";
 
 export function buildApiUrl(path: string): string {
   if (!path) {
@@ -13,17 +11,7 @@ export function buildApiUrl(path: string): string {
     return path;
   }
 
-  let normalized = path;
-
-  if (!normalized.startsWith("/")) {
-    normalized = `/${normalized}`;
-  }
-
-  if (!normalized.startsWith("/api")) {
-    normalized = `/api${normalized}`;
-  }
-
-  return `${API_BASE_URL}${normalized}`;
+  return apiUrl(path);
 }
 
 export { API_BASE_URL };
@@ -50,7 +38,7 @@ function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
 }
 
 function normalizePath(path: string) {
-  return buildApiUrl(path);
+  return apiUrl(path);
 }
 
 export async function clientApi(path: string, options: RequestInit = {}) {
@@ -63,12 +51,8 @@ export async function clientApi(path: string, options: RequestInit = {}) {
 }
 
 export async function apiRequest(path: string, options: RequestInit = {}) {
-  const response = await apiClient.request({
-    url: normalizePath(path),
-    ...toAxiosConfig(options),
-  });
-
-  return response.data;
+  const response = await request(path, options);
+  return response.json();
 }
 
 type ApiResponse<T = unknown> = Promise<AxiosResponse<T>>;
