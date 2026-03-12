@@ -1,5 +1,5 @@
 import { getActiveClientSessionToken } from "../state/clientSession";
-import { apiRequest } from "../lib/api";
+import { apiRequest } from "../api/client";
 
 export type ClientSession = {
   applicationId: string;

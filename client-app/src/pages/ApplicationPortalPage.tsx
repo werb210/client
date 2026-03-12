@@ -1,12 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  destroyVoice,
-  endCall,
-  initVoice,
-  startCall,
-  subscribe,
-  type CallState,
-} from "@/services/voiceService";
+import { useClientCall } from "@/telephony/hooks/useClientCall";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ApplicationPortalView,
@@ -47,7 +40,7 @@ export function ApplicationPortalPage(): JSX.Element {
     Record<string, UploadStateEntry>
   >({});
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
-  const [callState, setCallState] = useState<CallState>("idle");
+  const { status: callState, startCall, hangup } = useClientCall();
   const navigate = useNavigate();
 
   const uploadStorage = useMemo(() => {
@@ -70,19 +63,6 @@ export function ApplicationPortalPage(): JSX.Element {
     if (!id) return;
     saveUploadState(id, uploadState, uploadErrors, uploadStorage);
   }, [id, uploadErrors, uploadState, uploadStorage]);
-
-  useEffect(() => {
-    const unsubscribe = subscribe(setCallState);
-
-    void initVoice("client_user").catch(() => {
-      setCallState("error");
-    });
-
-    return () => {
-      unsubscribe();
-      destroyVoice();
-    };
-  }, []);
 
   const refreshDocuments = useCallback(async () => {
     if (!id) return;
@@ -296,7 +276,7 @@ export function ApplicationPortalPage(): JSX.Element {
   );
 
   const handleCallUs = useCallback(async () => {
-    void startCall("support");
+    void startCall();
   }, []);
 
   if (loading) {
@@ -351,7 +331,7 @@ export function ApplicationPortalPage(): JSX.Element {
         readOnlyMessage={readOnlyMessage}
         historyEvents={historyEvents}
         onCallUs={handleCallUs}
-        onEndCall={endCall}
+        onEndCall={hangup}
         callStatus={callState}
       />
       <div style={{ height: tokens.spacing.xl }} />

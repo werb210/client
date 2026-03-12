@@ -1,4 +1,4 @@
-import api from "@/lib/api";
+import api from "@/api/client";
 import type { ApiResponse } from "@/types/api";
 
 export type ClientLender = { id: string; name: string };

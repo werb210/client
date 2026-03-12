@@ -1,5 +1,5 @@
 import { getPersistedAttribution } from "./attribution";
-import { apiRequest } from "@/services/api";
+import { apiRequest } from "@/api/client";
 
 export function track(event: string) {
   if (import.meta.env.DEV) {

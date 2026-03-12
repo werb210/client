@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import api from "@/lib/api";
+import api from "@/api/client";
 import {
   clearActiveClientSessionToken,
   ensureClientSession,

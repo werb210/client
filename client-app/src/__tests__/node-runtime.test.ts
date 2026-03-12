@@ -3,8 +3,8 @@ import packageJson from "../../package.json";
 import nvmrcContent from "../../../.nvmrc?raw";
 
 describe("Node runtime configuration", () => {
-  it("declares Node 22+ in package.json engines", () => {
-    expect(packageJson.engines?.node).toBe(">=22 <23");
+  it("declares Node 20.10-22 in package.json engines", () => {
+    expect(packageJson.engines?.node).toBe(">=20.10 <23");
   });
 
   it("pins Node 22 in the repo .nvmrc", () => {

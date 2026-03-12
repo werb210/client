@@ -24,12 +24,10 @@ import { persistAttributionFromUrl } from "../utils/attribution";
 import ChatSupportWidget from "@/components/ChatSupportWidget";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { useReadinessBridge } from "@/hooks/useReadinessBridge";
-import { apiRequest } from "@/services/api";
+import { apiRequest } from "@/api/client";
 import { apiUrl } from "@/config/api";
-import { endCall } from "@/services/voiceService";
-import { fetchVoiceToken } from "@/api/voice";
-import { initializeClientVoice } from "@/telephony/services/clientVoice";
-import CallUsButton from "../components/CallUsButton";
+import { initializeVoice } from "@/telephony/voiceClient";
+import CallUsButton from "@/telephony/components/CallUsButton";
 
 export default function App() {
   const { app, loadFromServer, update } = useApplicationStore();
@@ -163,8 +161,7 @@ export default function App() {
 
     void (async () => {
       try {
-        const token = await fetchVoiceToken("client_user");
-        await initializeClientVoice(token);
+        await initializeVoice("client_user");
       } catch {
         // ignore voice initialization failures
       }
@@ -186,11 +183,6 @@ export default function App() {
       });
   }, []);
 
-  useEffect(() => {
-    return () => {
-      endCall();
-    };
-  }, []);
 
   if (refreshing) {
     return <SessionRefreshOverlay />;

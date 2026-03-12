@@ -1,5 +1,5 @@
-import applicationFixture from "@/test/fixtures/application.json";
-import lendersFixture from "@/test/fixtures/lenders.json";
+import applicationFixture from "@/__tests__/fixtures/application.json";
+import lendersFixture from "@/__tests__/fixtures/lenders.json";
 import { vi } from "vitest";
 
 export const mockedApi = {
@@ -15,7 +15,7 @@ export const mockedApi = {
 };
 
 export function installApiMock() {
-  vi.mock("@/lib/api", () => ({
+  vi.mock("@/api/client", () => ({
     default: mockedApi,
     apiRequest: vi.fn(async () => applicationFixture),
     buildApiUrl: vi.fn((path: string) => `http://localhost${path}`),

@@ -6,7 +6,7 @@ import { Input } from "../../components/ui/Input";
 import { PhoneInput } from "../../components/ui/PhoneInput";
 import { Button } from "../../components/ui/Button";
 import { components, layout, scrollToFirstError, tokens } from "@/styles";
-import { apiRequest } from "../../lib/api";
+import { apiRequest } from "../../api/client";
 
 export default function ApplyStep3() {
   const navigate = useNavigate();

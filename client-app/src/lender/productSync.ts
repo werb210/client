@@ -1,4 +1,4 @@
-import { api } from "../api/client";
+import api from "../api/client";
 import { OfflineStore } from "../state/offline";
 
 export const ProductSync = {

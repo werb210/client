@@ -11,9 +11,7 @@ import { bootstrapContinuation } from "./api/applicationProgress";
 import { getAccessToken } from "./services/token";
 import { processQueue } from "./lib/uploadQueue";
 
-if (import.meta.env.PROD) {
-  validateEnv();
-}
+validateEnv();
 
 window.addEventListener("online", () => {
   void processQueue();

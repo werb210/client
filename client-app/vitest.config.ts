@@ -8,9 +8,10 @@ export default defineConfig({
     },
   },
   test: {
+    include: ["src/__tests__/**/*.test.ts"],
     environment: "jsdom",
     globals: true,
-    setupFiles: ["src/test/setup.ts"],
+    setupFiles: ["src/__tests__/setup.ts"],
     clearMocks: true,
     restoreMocks: true,
     mockReset: true,

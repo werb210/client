@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const postMock = vi.fn().mockResolvedValue({ data: { ok: true } });
 
-vi.mock("@/lib/api", () => ({
+vi.mock("@/api/client", () => ({
   default: {
     post: postMock,
   },

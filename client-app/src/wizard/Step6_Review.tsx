@@ -41,7 +41,7 @@ import {
   trackConversion,
   trackEvent,
 } from "../utils/analytics";
-import { apiRequest } from "../lib/api";
+import { apiRequest } from "../api/client";
 import { clearStoredReadinessSession } from "@/api/website";
 import { parseCurrencyAmount } from "./productSelection";
 

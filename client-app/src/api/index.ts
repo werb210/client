@@ -1,3 +1,3 @@
-import api from "@/lib/api";
+import api from "@/api/client";
 
 export default api;

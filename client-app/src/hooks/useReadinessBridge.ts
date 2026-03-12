@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { apiRequest } from "@/services/api";
+import { apiRequest } from "@/api/client";
 
 
 type ReadinessData = Partial<{

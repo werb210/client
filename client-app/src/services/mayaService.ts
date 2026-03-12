@@ -1,4 +1,4 @@
-import api from "../core/apiClient";
+import api from "@/api/client";
 
 export async function sendMessageToMaya(message: string) {
   return api.post("/maya/client-chat", { message });

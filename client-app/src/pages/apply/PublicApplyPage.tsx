@@ -11,7 +11,7 @@ import {
 import { getContinuationSession, fetchContinuation, fetchReadinessSession } from "@/api/continuation";
 import { checkContinuation } from "../../services/continuation";
 import { getSessionId, trackEvent } from "../../utils/analytics";
-import { apiRequest } from "@/services/api";
+import { apiRequest } from "@/api/client";
 import type { ApiError } from "@/types/api";
 import { fundingAmountSchema, emailSchema, phoneSchema } from "@/utils/validationSchema";
 import { executeCaptcha } from "@/security/useCaptcha";
