@@ -1,9 +1,12 @@
-export function validateEnv() {
-  const required = ["VITE_API_BASE_URL"]
+export const ENV = {
+  API_URL:
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://server.boreal.financial"
+};
 
-  required.forEach((key) => {
-    if (!import.meta.env[key]) {
-      console.warn(`Missing environment variable: ${key}`)
-    }
-  })
+export function validateEnv() {
+  if (!ENV.API_URL) {
+    console.warn("Missing environment variable: VITE_API_URL or VITE_API_BASE_URL");
+  }
 }
