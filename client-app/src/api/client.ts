@@ -19,3 +19,33 @@ export async function clientApi(path: string, options: RequestInit = {}) {
 
   return res.json()
 }
+
+export async function apiRequest(
+  path: string,
+  options: RequestInit = {}
+) {
+  const base =
+    import.meta.env.VITE_API_URL ||
+    "https://api.staff.boreal.financial"
+
+  const url =
+    path.startsWith("http")
+      ? path
+      : `${base}${path.startsWith("/") ? "" : "/"}${path}`
+
+  const res = await fetch(url, {
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    },
+    ...options
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || `API ${res.status}`)
+  }
+
+  return res.json()
+}
