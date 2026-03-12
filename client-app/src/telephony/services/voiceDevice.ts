@@ -3,12 +3,8 @@ import { Device } from "@twilio/voice-sdk";
 let device: Device | null = null;
 
 export async function initializeVoice(identity: string) {
-  const res = await fetch("/api/voice/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ identity }),
+  const res = await fetch(`/api/voice/token?identity=${encodeURIComponent(identity)}`, {
+    method: "GET",
   });
 
   if (!res.ok) {
