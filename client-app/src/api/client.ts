@@ -1,17 +1,23 @@
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import apiClient from "@/lib/apiClient";
-import { apiRequest as request, apiUrl, getApiBaseUrl } from "./request";
+import { apiRequest as request } from "./request";
+import { getRuntimeConfig } from "../config/runtimeConfig";
+
+const { API_BASE_URL } = getRuntimeConfig();
+
+export const API_BASE = API_BASE_URL;
 
 export function buildApiUrl(path: string): string {
   if (!path) {
-    return `${getApiBaseUrl()}/api`;
+    return API_BASE;
   }
 
   if (path.startsWith("http")) {
     return path;
   }
 
-  return apiUrl(path);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE}${normalizedPath}`;
 }
 
 function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
@@ -36,7 +42,7 @@ function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
 }
 
 function normalizePath(path: string) {
-  return apiUrl(path);
+  return buildApiUrl(path);
 }
 
 export async function clientApi(path: string, options: RequestInit = {}) {

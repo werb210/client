@@ -1,8 +1,8 @@
 import { getRuntimeConfig } from "../config/runtimeConfig";
 
 function getApiOrigin() {
-  const { API_URL } = getRuntimeConfig();
-  return API_URL.replace(/\/$/, "");
+  const { API_BASE_URL } = getRuntimeConfig();
+  return API_BASE_URL.replace(/\/$/, "");
 }
 
 function normalizeApiPath(path: string) {
@@ -10,10 +10,6 @@ function normalizeApiPath(path: string) {
 
   if (!normalized.startsWith("/")) {
     normalized = `/${normalized}`;
-  }
-
-  if (!normalized.startsWith("/api")) {
-    normalized = `/api${normalized}`;
   }
 
   return normalized;
