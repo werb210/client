@@ -43,7 +43,7 @@ export function useClientSession(tokenOverride?: string | null): UseClientSessio
 
     const validateAndPersist = async () => {
       try {
-        const res = await api.post<{ valid?: boolean }>("/api/session/validate", { token });
+        const res = await api.post<{ valid?: boolean }>("/session", { token });
         if (!active) return;
         if (!res.data?.valid) {
           clearActiveClientSessionToken();
