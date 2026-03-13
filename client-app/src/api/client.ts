@@ -3,13 +3,16 @@ import apiClient from "@/lib/apiClient";
 import { apiRequest as request } from "./request";
 import { getRuntimeConfig } from "../config/runtimeConfig";
 
-const { API_BASE_URL } = getRuntimeConfig();
+export function getApiBase(): string {
+  const { API_BASE_URL } = getRuntimeConfig();
+  return API_BASE_URL.replace(/\/$/, "");
+}
 
-export const API_BASE = API_BASE_URL;
+export const API_BASE = getApiBase;
 
 export function buildApiUrl(path: string): string {
   if (!path) {
-    return API_BASE;
+    return getApiBase();
   }
 
   if (path.startsWith("http")) {
@@ -17,7 +20,7 @@ export function buildApiUrl(path: string): string {
   }
 
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${API_BASE}${normalizedPath}`;
+  return `${getApiBase()}${normalizedPath}`;
 }
 
 function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
