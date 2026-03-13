@@ -11,17 +11,21 @@ import { loadLocalBackup, useLocalBackup } from "../system/useLocalBackup";
 import { apiRequest } from "@/api/client";
 import { emptyApplicationDraft } from "../constants/applicationDraft";
 
-function createEmptyApplication() {
-  return {
-    applicationDraft: {
-      borrower: {},
-      company: {},
-      financials: {},
-      application: {},
-      documents: []
-    }
-  }
-}
+const emptyApp: ApplicationData = {
+  applicationDraft: emptyApplicationDraft,
+  kyc: {},
+  productCategory: null,
+  matchPercentages: {},
+  eligibleProducts: [],
+  eligibleCategories: [],
+  eligibilityReasons: [],
+  business: {},
+  applicant: {},
+  documents: {},
+  productRequirements: {},
+  termsAccepted: false,
+  linkedApplicationTokens: [],
+};
 
 
 
