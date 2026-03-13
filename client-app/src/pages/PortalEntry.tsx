@@ -10,7 +10,7 @@ import { formatPhoneNumber, getCountryCode } from "../utils/location";
 import { resolveOtpNextStep } from "../auth/otp";
 import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { components, layout, scrollToFirstError } from "@/styles";
-import { verifyOtp, requestOtp } from "@/services/auth";
+import { verifyOtp, requestOtp } from "@/services/otpService";
 import { setToken } from "@/auth/tokenStorage";
 import { ensureClientSession, setActiveClientSessionToken } from "@/state/clientSession";
 
@@ -19,6 +19,7 @@ export function PortalEntry() {
   const [phone, setPhone] = useState("");
   const [showOtp, setShowOtp] = useState(false);
   const [otpError, setOtpError] = useState("");
+  const [sessionToken, setSessionToken] = useState<string>("");
   const [phoneError, setPhoneError] = useState("");
   const [serverCode, setServerCode] = useState("");
   const countryCode = useMemo(() => getCountryCode("United States"), []);
@@ -44,65 +45,58 @@ export function PortalEntry() {
     }
     setPhoneError("");
     setServerCode("");
-    const response = await requestOtp(normalized);
-    if (!response?.ok) {
-      setPhoneError(response?.message || "Unable to send code. Please try again.");
-      return;
-    }
 
-    if (response.demoCode) {
-      setServerCode(response.demoCode);
+    try {
+      const token = await requestOtp(normalized);
+      setSessionToken(token);
+      setShowOtp(true);
+    } catch (error) {
+      setPhoneError("Unable to send code. Please try again.");
     }
-    setShowOtp(true);
   }
 
   async function handleVerify(code: string) {
-    setOtpError("");
-    const normalizedPhone = phone.trim();
-    const response = await verifyOtp(normalizedPhone, code);
-    if (!response?.ok) {
-      setOtpError("Incorrect code. Please try again.");
-      return;
-    }
+    try {
+      setOtpError("");
+      const normalizedPhone = phone.trim();
+      const result = await verifyOtp(sessionToken, code);
 
-    if (response.sessionToken) {
-      setToken(response.sessionToken);
-      setActiveClientSessionToken(response.sessionToken);
+      if (!result?.success) {
+        setOtpError("Invalid code");
+        return;
+      }
+
+      setToken(sessionToken);
+      setActiveClientSessionToken(sessionToken);
       ensureClientSession({
-        submissionId: response.applicationToken || normalizedPhone,
-        accessToken: response.sessionToken,
+        submissionId: normalizedPhone,
+        accessToken: sessionToken,
       });
+
+      ClientProfileStore.setLastUsedPhone(normalizedPhone);
+      const nextStep = resolveOtpNextStep(ClientProfileStore.getProfile(normalizedPhone));
+
+      if (nextStep.action === "start") {
+        navigate("/dashboard");
+        return;
+      }
+
+      if (nextStep.action === "resume") {
+        navigate(`/continue/${nextStep.token}`);
+        return;
+      }
+
+      const token = nextStep.token;
+      const profile = ClientProfileStore.getProfile(normalizedPhone);
+      const applicationTokens = profile?.applicationTokens || [];
+      applicationTokens.forEach((entry) => ClientProfileStore.markPortalVerified(entry));
+      ClientProfileStore.markPortalVerified(token);
+      clearServiceWorkerCaches("otp").finally(() => {
+        navigate(`/status?token=${token}`);
+      });
+    } catch (err) {
+      setOtpError("OTP verification failed");
     }
-
-    if (response.applicationToken) {
-      ClientProfileStore.upsertProfile(normalizedPhone, response.applicationToken);
-    }
-
-    if (response.submittedToken) {
-      ClientProfileStore.markSubmitted(normalizedPhone, response.submittedToken);
-    }
-
-    ClientProfileStore.setLastUsedPhone(normalizedPhone);
-    const nextStep = resolveOtpNextStep(ClientProfileStore.getProfile(normalizedPhone));
-
-    if (nextStep.action === "start") {
-      navigate("/apply");
-      return;
-    }
-
-    if (nextStep.action === "resume") {
-      navigate(`/continue/${nextStep.token}`);
-      return;
-    }
-
-    const token = nextStep.token;
-    const profile = ClientProfileStore.getProfile(normalizedPhone);
-    const applicationTokens = profile?.applicationTokens || [];
-    applicationTokens.forEach((entry) => ClientProfileStore.markPortalVerified(entry));
-    ClientProfileStore.markPortalVerified(token);
-    clearServiceWorkerCaches("otp").finally(() => {
-      navigate(`/status?token=${token}`);
-    });
   }
 
   return (
@@ -150,15 +144,21 @@ export function PortalEntry() {
 
           {showOtp && (
             <div style={layout.stackTight}>
-              <div style={components.form.helperText}>
-                Enter the 6-digit code sent to your phone.
-              </div>
-              {serverCode && (
-                <div style={components.form.helperText} data-testid="server-demo-code">
-                  Demo code: {serverCode}
-                </div>
+              {!sessionToken ? (
+                <div>Requesting verification code...</div>
+              ) : (
+                <>
+                  <div style={components.form.helperText}>
+                    Enter the 6-digit code sent to your phone.
+                  </div>
+                  {serverCode && (
+                    <div style={components.form.helperText} data-testid="server-demo-code">
+                      Demo code: {serverCode}
+                    </div>
+                  )}
+                  <OtpInput onComplete={handleVerify} />
+                </>
               )}
-              <OtpInput onComplete={handleVerify} />
               {otpError && (
                 <div style={components.form.errorText} data-error={true}>
                   {otpError}

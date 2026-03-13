@@ -24,14 +24,14 @@ export async function loadSessionFromUrl(): Promise<ClientSession | null> {
 
   if (!token) return null;
 
-  const data = await apiRequest<SessionResponse>(
+  const data = await (apiRequest(
     `/api/client/session?token=${encodeURIComponent(token)}`,
     {
       headers: authToken
         ? { Authorization: `Bearer ${authToken}` }
         : undefined,
     }
-  );
+  ) as Promise<SessionResponse>);
 
   const serverStep =
     Number(data.nextIncompleteStep ?? data.nextStep ?? data.step) || null;

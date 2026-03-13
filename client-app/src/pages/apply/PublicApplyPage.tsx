@@ -672,7 +672,7 @@ export default function PublicApplyPage() {
 
     if (!resumeToken) return;
 
-    void apiRequest<DraftPayload | null>(`/api/drafts/${resumeToken}`)
+    void (apiRequest(`/api/drafts/${resumeToken}`) as Promise<DraftPayload | null>)
       .then((data: DraftPayload | null) => {
         if (data) {
           setValues((prev) => ({ ...prev, ...data }));
@@ -759,7 +759,7 @@ export default function PublicApplyPage() {
 
   useEffect(() => {
     let isMounted = true;
-    apiRequest<{ ip?: string }>("https://api.ipify.org?format=json")
+    (apiRequest("https://api.ipify.org?format=json") as Promise<{ ip?: string }>)
       .then((data: { ip?: string }) => {
         if (isMounted && data?.ip) {
           setClientIp(data.ip);
