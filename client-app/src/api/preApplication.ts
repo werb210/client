@@ -14,9 +14,9 @@ type PreApplicationLookupResponse = {
 export async function lookupPreApplication(
   email: string
 ): Promise<PreApplicationLookupResponse | null> {
-  return apiRequest<PreApplicationLookupResponse>(
+  return (apiRequest(
     `/api/preapp/lookup?email=${encodeURIComponent(email)}`
-  ).catch((): null => null);
+  ) as Promise<PreApplicationLookupResponse>).catch((): null => null);
 }
 
 export async function consumePreApplication(token: string): Promise<any> {
