@@ -13,9 +13,12 @@ type ReadinessSetter = (value: unknown) => void;
 export function useReadinessBridge(
   setStep1: ReadinessSetter,
   setStep3: ReadinessSetter,
-  setStep4: ReadinessSetter
+  setStep4: ReadinessSetter,
+  enabled: boolean = true
 ): void {
   useEffect(() => {
+    if (!enabled) return;
+
     const params = new URLSearchParams(window.location.search);
     const token = params.get("readiness");
 
@@ -33,5 +36,5 @@ export function useReadinessBridge(
     }
 
     void fetchBridge();
-  }, [setStep1, setStep3, setStep4]);
+  }, [enabled, setStep1, setStep3, setStep4]);
 }

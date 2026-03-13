@@ -10,6 +10,7 @@ import { getSessionId, trackEvent } from "../utils/analytics";
 import { loadLocalBackup, useLocalBackup } from "../system/useLocalBackup";
 import { apiRequest } from "@/api/client";
 import { emptyApplicationDraft } from "../constants/applicationDraft";
+import { getToken } from "../auth/tokenStorage";
 
 const emptyApp: ApplicationData = {
   applicationDraft: emptyApplicationDraft,
@@ -27,8 +28,9 @@ const emptyApp: ApplicationData = {
   linkedApplicationTokens: [],
 };
 
-
-
+function hasActiveAuthSession() {
+  return Boolean(getToken());
+}
 
 function buildApplicationDraft(source: ApplicationData) {
   const docs = Object.entries(source.documents || {}).map(([type, value]) => ({
@@ -203,7 +205,7 @@ export function useApplicationStore() {
   const saveToServer = useMemo(
     () =>
       debounce(async (state: ApplicationData) => {
-        if (!state.applicationToken) return;
+        if (!state.applicationToken || !hasActiveAuthSession()) return;
 
         await apiRequest("/api/application/update", {
           method: "POST",
@@ -216,11 +218,16 @@ export function useApplicationStore() {
   function init() {
     if (initialized) return;
 
-    void import("../lender/productSync").then(({ ProductSync }) => {
-      ProductSync.invalidateCache();
-      void ProductSync.sync().catch(() => {
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    const isOtpScreen = pathname === "/otp" || pathname === "/portal";
+
+    if (!isOtpScreen && hasActiveAuthSession()) {
+      void import("../lender/productSync").then(({ ProductSync }) => {
+        ProductSync.invalidateCache();
+        void ProductSync.sync().catch(() => {
+        });
       });
-    });
+    }
 
     setInitialized(true);
   }
@@ -323,7 +330,7 @@ export function useApplicationStore() {
   }, [isOffline]);
 
   useEffect(() => {
-    if (isOffline || !app.applicationToken || !canAutosave) return;
+    if (isOffline || !app.applicationToken || !canAutosave || !hasActiveAuthSession()) return;
     if (!app) return;
 
     if (app) {

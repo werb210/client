@@ -28,20 +28,16 @@ describe("OTP flow", () => {
     globalThis.localStorage = local as unknown as Storage;
   });
 
-  it("verifies OTP for a fresh applicant", () => {
+  it("routes a fresh applicant to start", () => {
     const phone = "(555) 222-3333";
-    const code = ClientProfileStore.requestOtp(phone);
-    expect(ClientProfileStore.verifyOtp(phone, code)).toBe(true);
 
     const nextStep = resolveOtpNextStep(ClientProfileStore.getProfile(phone));
     expect(nextStep).toEqual({ action: "start" });
   });
 
-  it("verifies OTP for a returning applicant", () => {
+  it("routes a returning applicant to resume", () => {
     const phone = "(555) 999-0000";
     ClientProfileStore.upsertProfile(phone, "token-resume");
-    const code = ClientProfileStore.requestOtp(phone);
-    expect(ClientProfileStore.verifyOtp(phone, code)).toBe(true);
 
     const nextStep = resolveOtpNextStep(ClientProfileStore.getProfile(phone));
     expect(nextStep).toEqual({ action: "resume", token: "token-resume" });

@@ -97,6 +97,10 @@ function ReadinessLoader(): null {
   const location = useLocation();
 
   useEffect(() => {
+    if (location.pathname === "/otp" || location.pathname === "/portal") {
+      return;
+    }
+
     let active = true;
 
     const resolveLeadId = async (): Promise<string | null> => {
@@ -173,7 +177,7 @@ function ReadinessLoader(): null {
     return () => {
       active = false;
     };
-  }, [location.search]);
+  }, [location.pathname, location.search]);
 
   return null;
 }

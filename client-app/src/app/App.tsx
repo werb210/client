@@ -36,6 +36,8 @@ export default function App() {
   const updateAvailable = useServiceWorkerUpdate();
   const [continuationError, setContinuationError] = useState<string | null>(null);
   const hasInitializedClientVoice = useRef(false);
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+  const isOtpScreen = pathname === "/otp" || pathname === "/portal";
 
   useEffect(() => {
     appRef.current = app;
@@ -73,7 +75,7 @@ export default function App() {
     });
   }, [update]);
 
-  useReadinessBridge(setStep1Data, setStep3Data, setStep4Data);
+  useReadinessBridge(setStep1Data, setStep3Data, setStep4Data, !isOtpScreen);
 
   const debugUpdateAvailable =
     typeof window !== "undefined" &&
@@ -130,6 +132,8 @@ export default function App() {
   }, [app.currentStep]);
 
   useEffect(() => {
+    if (isOtpScreen) return;
+
     const continuation = window.__APP_CONTINUATION__;
     if (!continuation?.applicationId) return;
 
@@ -144,7 +148,7 @@ export default function App() {
       applicationToken: continuation.applicationId,
       currentStep: continuation.step,
     });
-  }, [loadFromServer, update]);
+  }, [isOtpScreen, loadFromServer, update]);
 
   useEffect(() => {
     if (window.__APP_CONTINUATION_ERROR__) {
@@ -153,6 +157,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (isOtpScreen) {
+      return;
+    }
+
     if (hasInitializedClientVoice.current) {
       return;
     }
@@ -167,7 +175,7 @@ export default function App() {
         // ignore voice initialization failures
       }
     })();
-  }, []);
+  }, [isOtpScreen]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -203,9 +211,11 @@ export default function App() {
         updateAvailable={updateAvailable || debugUpdateAvailable}
         onApplyUpdate={() => void applyServiceWorkerUpdate()}
       />
-      <div className="mx-auto mt-4 w-full max-w-7xl px-6 flex justify-end">
-        <CallUsButton />
-      </div>
+      {!isOtpScreen && (
+        <div className="mx-auto mt-4 w-full max-w-7xl px-6 flex justify-end">
+          <CallUsButton />
+        </div>
+      )}
       <main className="max-w-7xl mx-auto px-6 py-14 md:py-20 w-full flex-1">
         <AppRouter />
       </main>
