@@ -9,14 +9,13 @@ import { ClientProfileStore } from "../state/clientProfiles";
 import { formatPhoneNumber, getCountryCode } from "../utils/location";
 import { resolveOtpNextStep } from "../auth/otp";
 import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
-import { components, layout, scrollToFirstError, tokens } from "@/styles";
-import { getAccessToken } from "@/services/token";
+import { components, layout, scrollToFirstError } from "@/styles";
+import { verifyOtp, requestOtp } from "@/services/auth";
 
 export function PortalEntry() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [showOtp, setShowOtp] = useState(false);
-  const [otpHint, setOtpHint] = useState("");
   const [otpError, setOtpError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const countryCode = useMemo(() => getCountryCode("United States"), []);
@@ -29,52 +28,51 @@ export function PortalEntry() {
   }, []);
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (token) {
-      navigate(`/status?token=${token}`, { replace: true });
-    }
-  }, [navigate]);
-
-  useEffect(() => {
     if (phoneError || otpError) {
       scrollToFirstError();
     }
   }, [otpError, phoneError]);
 
-  function handleSendOtp() {
+  async function handleSendOtp() {
     const normalized = phone.trim();
     if (!normalized) {
       setPhoneError("Enter the phone number used for your application.");
       return;
     }
     setPhoneError("");
-    const code = ClientProfileStore.requestOtp(normalized);
-    setOtpHint(code);
+    const response = await requestOtp(normalized);
+    if (!response?.ok) {
+      setPhoneError("Unable to send code. Please try again.");
+      return;
+    }
     setShowOtp(true);
   }
 
-  function handleVerify(code: string) {
+  async function handleVerify(code: string) {
     setOtpError("");
-    if (!ClientProfileStore.verifyOtp(phone, code)) {
+    const normalizedPhone = phone.trim();
+    const response = await verifyOtp(normalizedPhone, code);
+    if (!response?.ok) {
       setOtpError("Incorrect code. Please try again.");
       return;
     }
-    ClientProfileStore.setLastUsedPhone(phone);
-    const nextStep = resolveOtpNextStep(ClientProfileStore.getProfile(phone));
+    ClientProfileStore.setLastUsedPhone(normalizedPhone);
+    const nextStep = resolveOtpNextStep(ClientProfileStore.getProfile(normalizedPhone));
+
     if (nextStep.action === "start") {
-      setOtpError("We couldn't find an application for this number.");
+      navigate("/apply");
       return;
     }
+
     if (nextStep.action === "resume") {
-      setOtpError(
-        "This number has an in-progress application. Please continue your application before accessing the portal."
-      );
+      navigate(`/continue/${nextStep.token}`);
       return;
     }
+
     const token = nextStep.token;
-    const profile = ClientProfileStore.getProfile(phone);
-    const tokens = profile?.applicationTokens || [];
-    tokens.forEach((entry) => ClientProfileStore.markPortalVerified(entry));
+    const profile = ClientProfileStore.getProfile(normalizedPhone);
+    const applicationTokens = profile?.applicationTokens || [];
+    applicationTokens.forEach((entry) => ClientProfileStore.markPortalVerified(entry));
     ClientProfileStore.markPortalVerified(token);
     clearServiceWorkerCaches("otp").finally(() => {
       navigate(`/status?token=${token}`);
@@ -130,11 +128,6 @@ export function PortalEntry() {
                 Enter the 6-digit code sent to your phone.
               </div>
               <OtpInput onComplete={handleVerify} />
-              {otpHint && (
-                <div style={{ ...components.form.helperText, color: tokens.colors.textSecondary }}>
-                  Demo OTP: {otpHint}
-                </div>
-              )}
               {otpError && (
                 <div style={components.form.errorText} data-error={true}>
                   {otpError}
