@@ -27,5 +27,5 @@ export async function fetchApplicationContinuation() {
 }
 
 export async function saveApplicationStep(payload: SaveApplicationStepPayload) {
-  await api.post("/api/application/save", payload);
+  await api.post("/api/application", payload);
 }
