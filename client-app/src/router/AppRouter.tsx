@@ -1,6 +1,5 @@
 import { Suspense, lazy, useEffect } from "react";
 import {
-  BrowserRouter,
   Routes,
   Route,
   Navigate,
@@ -184,16 +183,14 @@ export default function AppRouter(): JSX.Element {
 
   if (isOffline) {
     return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="*" element={<OfflineFallback />} />
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        <Route path="*" element={<OfflineFallback />} />
+      </Routes>
     );
   }
 
   return (
-    <BrowserRouter>
+    <>
       <SessionGuard />
       <ReadinessLoader />
       <Suspense fallback={<div className="py-20 text-center">Loading...</div>}>
@@ -315,6 +312,6 @@ export default function AppRouter(): JSX.Element {
           />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </>
   );
 }
