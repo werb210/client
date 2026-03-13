@@ -11,6 +11,8 @@ import { resolveOtpNextStep } from "../auth/otp";
 import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { components, layout, scrollToFirstError } from "@/styles";
 import { verifyOtp, requestOtp } from "@/services/auth";
+import { setToken } from "@/auth/tokenStorage";
+import { ensureClientSession, setActiveClientSessionToken } from "@/state/clientSession";
 
 export function PortalEntry() {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ export function PortalEntry() {
   const [showOtp, setShowOtp] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [serverCode, setServerCode] = useState("");
   const countryCode = useMemo(() => getCountryCode("United States"), []);
 
   useEffect(() => {
@@ -40,10 +43,15 @@ export function PortalEntry() {
       return;
     }
     setPhoneError("");
+    setServerCode("");
     const response = await requestOtp(normalized);
     if (!response?.ok) {
-      setPhoneError("Unable to send code. Please try again.");
+      setPhoneError(response?.message || "Unable to send code. Please try again.");
       return;
+    }
+
+    if (response.demoCode) {
+      setServerCode(response.demoCode);
     }
     setShowOtp(true);
   }
@@ -56,6 +64,24 @@ export function PortalEntry() {
       setOtpError("Incorrect code. Please try again.");
       return;
     }
+
+    if (response.sessionToken) {
+      setToken(response.sessionToken);
+      setActiveClientSessionToken(response.sessionToken);
+      ensureClientSession({
+        submissionId: response.applicationToken || normalizedPhone,
+        accessToken: response.sessionToken,
+      });
+    }
+
+    if (response.applicationToken) {
+      ClientProfileStore.upsertProfile(normalizedPhone, response.applicationToken);
+    }
+
+    if (response.submittedToken) {
+      ClientProfileStore.markSubmitted(normalizedPhone, response.submittedToken);
+    }
+
     ClientProfileStore.setLastUsedPhone(normalizedPhone);
     const nextStep = resolveOtpNextStep(ClientProfileStore.getProfile(normalizedPhone));
 
@@ -127,6 +153,11 @@ export function PortalEntry() {
               <div style={components.form.helperText}>
                 Enter the 6-digit code sent to your phone.
               </div>
+              {serverCode && (
+                <div style={components.form.helperText} data-testid="server-demo-code">
+                  Demo code: {serverCode}
+                </div>
+              )}
               <OtpInput onComplete={handleVerify} />
               {otpError && (
                 <div style={components.form.errorText} data-error={true}>

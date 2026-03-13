@@ -6,9 +6,8 @@ import {
 } from "./portalSessions";
 const PROFILE_KEY = "boreal_client_profiles";
 const LAST_PHONE_KEY = "boreal_client_last_phone";
-const OTP_KEY = "boreal_client_pending_otp";
 const PORTAL_SESSION_KEY = "boreal_portal_session_token";
-const OTP_TTL_MS = 5 * 60 * 1000;
+const PORTAL_SESSION_TTL_MS = 5 * 60 * 1000;
 
 export type ClientProfile = {
   phone: string;
@@ -19,11 +18,6 @@ export type ClientProfile = {
   updatedAt: number;
 };
 
-type StoredOtp = {
-  phone: string;
-  code: string;
-  createdAt: number;
-};
 
 function normalizePhone(phone: string) {
   return phone.replace(/\D/g, "");
@@ -183,47 +177,6 @@ export const ClientProfileStore = {
     const profile = this.getProfile(phone);
     return profile?.applicationTokens || [];
   },
-  requestOtp(phone: string) {
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    const payload: StoredOtp = {
-      phone: normalizePhone(phone),
-      code,
-      createdAt: Date.now(),
-    };
-    try {
-      localStorage.setItem(OTP_KEY, JSON.stringify(payload));
-    } catch {
-    }
-    return code;
-  },
-  getPendingOtp(phone: string) {
-    try {
-      const raw = localStorage.getItem(OTP_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as StoredOtp;
-      if (!parsed?.phone || !parsed?.code || !parsed?.createdAt) return null;
-      if (parsed.phone !== normalizePhone(phone)) return null;
-      if (Date.now() - parsed.createdAt > OTP_TTL_MS) {
-        localStorage.removeItem(OTP_KEY);
-        return null;
-      }
-      return parsed;
-    } catch {
-      return null;
-    }
-  },
-  verifyOtp(phone: string, code: string) {
-    const pending = this.getPendingOtp(phone);
-    if (!pending) return false;
-    const match = pending.code === code;
-    if (match) {
-      try {
-        localStorage.removeItem(OTP_KEY);
-      } catch {
-      }
-    }
-    return match;
-  },
   markPortalVerified(token: string) {
     if (!token) return;
     const list = loadPortalSessions();
@@ -234,7 +187,7 @@ export const ClientProfileStore = {
     next.unshift({
       token,
       verifiedAt: now,
-      expiresAt: now + OTP_TTL_MS,
+      expiresAt: now + PORTAL_SESSION_TTL_MS,
     });
     savePortalSessions(next);
     setPortalSessionToken(token);
@@ -263,7 +216,6 @@ export const ClientProfileStore = {
     try {
       localStorage.removeItem(PROFILE_KEY);
       localStorage.removeItem(LAST_PHONE_KEY);
-      localStorage.removeItem(OTP_KEY);
     } catch {
     }
     this.clearPortalSessions();
