@@ -1,8 +1,7 @@
-import { API_BASE } from "../config/api";
-import { safeFetch } from "../lib/safeFetch";
+import { apiRequest } from "../api/client";
 
 export async function updateApplication(payload: any) {
-  const data = await safeFetch(`${API_BASE}/application/update`, {
+  const data = await apiRequest("/api/application/update", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

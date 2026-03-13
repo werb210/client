@@ -205,7 +205,7 @@ export function useApplicationStore() {
       debounce(async (state: ApplicationData) => {
         if (!state.applicationToken) return;
 
-        await apiRequest("/application/update", {
+        await apiRequest("/api/application/update", {
           method: "POST",
           body: JSON.stringify(state),
         });

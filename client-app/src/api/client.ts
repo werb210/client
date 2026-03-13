@@ -11,16 +11,22 @@ export function getApiBase(): string {
 export const API_BASE = getApiBase;
 
 export function buildApiUrl(path: string): string {
+  const base = getApiBase();
+
   if (!path) {
-    return getApiBase();
+    return base;
   }
 
   if (path.startsWith("http")) {
     return path;
   }
 
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${getApiBase()}${normalizedPath}`;
+  let normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  if (base.endsWith("/api") && normalizedPath.startsWith("/api/")) {
+    normalizedPath = normalizedPath.replace(/^\/api/, "");
+  }
+
+  return `${base}${normalizedPath}`;
 }
 
 function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {

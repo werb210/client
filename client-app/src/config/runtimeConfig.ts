@@ -10,23 +10,24 @@ declare global {
   }
 }
 
-const DEFAULT_API_ORIGIN = "https://server.boreal.financial";
+const DEFAULT_API_ORIGIN = "https://server.boreal.financial/api";
 
 let runtimeConfig: RuntimeConfig | null = null;
 let runtimeConfigPromise: Promise<RuntimeConfig> | null = null;
 
 function normalizeRuntimeConfig(config: Partial<RuntimeConfig> = {}): RuntimeConfig {
   const apiOrigin =
-    config.API_URL ||
     config.API_BASE_URL ||
+    config.API_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
     DEFAULT_API_ORIGIN;
 
-  const normalizedOrigin = apiOrigin.replace(/\/$/, "");
+  const normalizedBase = apiOrigin.replace(/\/$/, "");
 
   return {
-    API_URL: normalizedOrigin,
-    API_BASE_URL: normalizedOrigin,
+    API_URL: normalizedBase,
+    API_BASE_URL: normalizedBase,
   };
 }
 

@@ -5,18 +5,23 @@ function getApiOrigin() {
   return API_BASE_URL.replace(/\/$/, "");
 }
 
-function normalizeApiPath(path: string) {
+function normalizeApiPath(path: string, base: string) {
   let normalized = path;
 
   if (!normalized.startsWith("/")) {
     normalized = `/${normalized}`;
   }
 
+  if (base.endsWith("/api") && normalized.startsWith("/api/")) {
+    return normalized.replace(/^\/api/, "");
+  }
+
   return normalized;
 }
 
 export function apiUrl(path: string) {
-  return `${getApiOrigin()}${normalizeApiPath(path)}`;
+  const base = getApiOrigin();
+  return `${base}${normalizeApiPath(path, base)}`;
 }
 
 export function apiRequest(path: string, options: RequestInit = {}) {
