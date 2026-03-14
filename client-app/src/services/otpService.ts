@@ -1,8 +1,8 @@
 import axios from "axios";
 
-export async function requestOtp(email: string) {
-  const res = await axios.post("/api/auth/request-otp", {
-    email,
+export async function requestOtp(phone: string) {
+  const res = await axios.post("/api/auth/otp/start", {
+    phone,
   });
 
   if (!res.data?.sessionToken) {
@@ -20,9 +20,9 @@ export async function verifyOtp(sessionToken: string, otp: string) {
     };
   }
 
-  const res = await axios.post("/api/auth/verify-otp", {
+  const res = await axios.post("/api/auth/otp/verify", {
     sessionToken,
-    otp,
+    code: otp,
   });
 
   return res.data;
