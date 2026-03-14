@@ -1,50 +1,33 @@
-import { normalizePhone } from "../utils/normalizePhone";
+import axios from "axios"
 
-const API = "https://server.boreal.financial/api/auth";
+const API = "https://server.boreal.financial/api"
 
-export async function requestOtp(phone: string) {
-  const normalized = normalizePhone(phone);
-
-  const res = await fetch(`${API}/request-otp`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      phone: normalized,
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`OTP request failed: ${text}`);
-  }
-
-  return res.json();
+export interface SendOtpResponse {
+  sessionId: string
 }
 
-export async function startOtp(phone: string) {
-  return requestOtp(phone);
+let otpSessionId: string | null = null
+
+export async function sendOtp(phone: string): Promise<void> {
+  const res = await axios.post(`${API}/auth/send-otp`, { phone })
+
+  if (!res.data?.sessionId) {
+    throw new Error("OTP session not returned from server")
+  }
+
+  otpSessionId = res.data.sessionId
 }
 
 export async function verifyOtp(phone: string, code: string) {
-  const normalized = normalizePhone(phone);
-
-  const res = await fetch(`${API}/verify-otp`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      phone: normalized,
-      code,
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`OTP verification failed: ${text}`);
+  if (!otpSessionId) {
+    throw new Error("OTP session missing")
   }
 
-  return res.json();
+  const res = await axios.post(`${API}/auth/verify-otp`, {
+    phone,
+    code,
+    sessionId: otpSessionId
+  })
+
+  return res.data
 }
