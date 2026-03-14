@@ -2,13 +2,27 @@ export type InitialSession = {
   token: string;
 };
 
+function readTokenFromClientSession(stored: string): string | null {
+  try {
+    const session = JSON.parse(stored);
+    return typeof session?.token === "string" ? session.token : null;
+  } catch {
+    return stored;
+  }
+}
+
 export async function bootstrapSession(): Promise<InitialSession | null> {
   if (typeof localStorage === "undefined") {
     return null;
   }
 
-  const token = localStorage.getItem("client_session");
+  const stored = localStorage.getItem("client_session");
 
+  if (!stored) {
+    return null;
+  }
+
+  const token = readTokenFromClientSession(stored);
   if (!token) {
     return null;
   }
