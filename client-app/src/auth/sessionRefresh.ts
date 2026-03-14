@@ -3,6 +3,7 @@ import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { setSessionRefreshing } from "../state/sessionRefresh";
 import { getActiveClientSessionToken } from "../state/clientSession";
 import { apiRequest } from "../api/client";
+import { getToken } from "./tokenStorage";
 
 let refreshPromise: Promise<boolean> | null = null;
 let refreshFailed = false;
@@ -16,7 +17,11 @@ export async function refreshSessionOnce() {
   if (refreshFailed) return false;
   if (refreshPromise) return refreshPromise;
 
-  const token = getActiveClientSessionToken();
+  const localSessionToken =
+    typeof localStorage !== "undefined" ? localStorage.getItem("client_session") || "" : "";
+  const token = getActiveClientSessionToken() || getToken() || localSessionToken;
+  if (!token) return true;
+
   setSessionRefreshing(true);
   refreshPromise = (apiRequest("/api/client/session/refresh", {
     method: "POST",
