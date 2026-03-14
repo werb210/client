@@ -17,7 +17,7 @@ import { ensureClientSession, setActiveClientSessionToken } from "@/state/client
 export function PortalEntry() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
-  const [otpRequested, setOtpRequested] = useState(false);
+  const [step, setStep] = useState<"phone" | "otp">("phone");
   const [rateLimited, setRateLimited] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -51,7 +51,7 @@ export function PortalEntry() {
 
     try {
       await startOtp(normalized);
-      setOtpRequested(true);
+      setStep("otp");
     } catch (err: any) {
       if (err?.response?.status === 429) {
         setRateLimited(true);
@@ -126,7 +126,7 @@ export function PortalEntry() {
             </p>
           </div>
 
-          {!otpRequested ? (
+          {step === "phone" ? (
             <>
               <div style={layout.stackTight} data-error={Boolean(phoneError)}>
                 <label htmlFor="portal-phone" style={components.form.label}>
