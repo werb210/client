@@ -75,7 +75,8 @@ export function PortalEntry() {
 
     try {
       const normalizedPhone = phone.trim();
-      const result = await verifyOtp(normalizedPhone, otpCode);
+      const code = String(otpCode).trim();
+      const result = await verifyOtp(normalizedPhone, code);
 
       if (!result?.success || !result?.sessionToken) {
         setError("Invalid code. Please try again.");
