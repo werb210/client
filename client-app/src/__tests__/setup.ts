@@ -76,3 +76,14 @@ import { TextEncoder, TextDecoder } from "util";
 
 (globalThis as any).TextEncoder = TextEncoder;
 (globalThis as any).TextDecoder = TextDecoder;
+
+
+/* ------------------------------
+   React act + scrollIntoView polyfills
+------------------------------- */
+
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = vi.fn();
+}
