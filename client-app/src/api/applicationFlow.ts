@@ -1,4 +1,4 @@
-import { apiFetch } from "../lib/apiClient";
+import { apiFetch } from "../lib/apiFetch";
 
 export async function getContinuation() {
   return apiFetch("/api/application/continuation");
