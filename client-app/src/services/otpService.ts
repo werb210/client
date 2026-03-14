@@ -2,23 +2,20 @@ import { apiClient } from "../lib/apiClient";
 
 function normalizePhone(input: string): string {
   const digits = input.replace(/\D/g, "");
-
-  if (digits.length === 11 && digits.startsWith("1")) {
-    return `+${digits}`;
-  }
-
   if (digits.length === 10) {
     return `+1${digits}`;
   }
 
-  return `+${digits}`;
+  if (!input.startsWith("+")) {
+    return `+${digits}`;
+  }
+
+  return input;
 }
 
 export async function startOtp(phone: string) {
-  const normalizedPhone = normalizePhone(phone);
-
-  await apiClient.post("/api/auth/otp/start", {
-    phone: normalizedPhone,
+  return apiClient.post("/api/auth/otp/start", {
+    phone: normalizePhone(phone),
   });
 }
 
