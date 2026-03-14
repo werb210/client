@@ -14,32 +14,23 @@ function normalizePhone(input: string): string {
   return `+${digits}`;
 }
 
-export async function requestOtp(phone: string) {
+export async function startOtp(phone: string) {
   const normalizedPhone = normalizePhone(phone);
 
-  const res = await apiClient.post("/api/auth/otp/start", {
+  await apiClient.post("/api/auth/otp/start", {
     phone: normalizedPhone,
   });
-
-  if (!res.data?.sessionToken) {
-    throw new Error("OTP session token missing");
-  }
-
-  return res.data.sessionToken as string;
 }
 
-export async function verifyOtp(sessionToken: string, otp: string) {
-  if (otp === "000000") {
-    return {
-      success: true,
-      demo: true,
-    };
-  }
+export async function requestOtp(phone: string) {
+  return startOtp(phone);
+}
 
-  const res = await apiClient.post("/api/auth/otp/verify", {
-    sessionToken,
-    code: otp,
+export async function verifyOtp(phone: string, code: string) {
+  const normalizedPhone = normalizePhone(phone);
+
+  return apiClient.post("/api/auth/otp/verify", {
+    phone: normalizedPhone,
+    code,
   });
-
-  return res.data;
 }
