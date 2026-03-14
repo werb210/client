@@ -18,6 +18,7 @@ export function PortalEntry() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [otpRequested, setOtpRequested] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
   const [otpError, setOtpError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [serverCode, setServerCode] = useState("");
@@ -46,12 +47,18 @@ export function PortalEntry() {
     setPhoneError("");
     setServerCode("");
     setOtpCode("");
+    setRateLimited(false);
 
     try {
       await startOtp(normalized);
       setOtpRequested(true);
-    } catch (error) {
-      setPhoneError("Unable to send code. Please try again.");
+    } catch (err: any) {
+      if (err?.response?.status === 429) {
+        setRateLimited(true);
+        setPhoneError("Code already sent. Please wait before requesting another.");
+      } else {
+        setPhoneError("Unable to send code. Please try again.");
+      }
     }
   }
 
@@ -149,6 +156,13 @@ export function PortalEntry() {
               <PrimaryButton style={{ width: "100%" }} onClick={handleSendCode}>
                 Send code
               </PrimaryButton>
+
+              {rateLimited && (
+                <div style={components.form.helperText}>
+                  Please wait a moment before requesting another code.
+                </div>
+              )}
+
             </>
           ) : (
             <div style={layout.stackTight}>
