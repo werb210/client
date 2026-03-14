@@ -17,8 +17,23 @@ export async function refreshSessionOnce() {
   if (refreshFailed) return false;
   if (refreshPromise) return refreshPromise;
 
-  const localSessionToken =
-    typeof localStorage !== "undefined" ? localStorage.getItem("client_session") || "" : "";
+  const localSessionToken = (() => {
+    if (typeof localStorage === "undefined") {
+      return "";
+    }
+
+    const stored = localStorage.getItem("client_session");
+    if (!stored) {
+      return "";
+    }
+
+    try {
+      const session = JSON.parse(stored);
+      return typeof session?.token === "string" ? session.token : "";
+    } catch {
+      return stored;
+    }
+  })();
   const token = getActiveClientSessionToken() || getToken() || localSessionToken;
   if (!token) return true;
 

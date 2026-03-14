@@ -31,7 +31,14 @@ export async function verifyOtp(phone: string, code: string) {
 
   const token = response.data?.token || response.data?.sessionToken;
   if (token && typeof localStorage !== "undefined") {
-    localStorage.setItem("client_session", token);
+    const session = {
+      token,
+      phone,
+      authenticated: true,
+      createdAt: Date.now(),
+    };
+
+    localStorage.setItem("client_session", JSON.stringify(session));
   }
 
   return response.data;

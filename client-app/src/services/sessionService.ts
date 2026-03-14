@@ -1,11 +1,29 @@
 import { apiFetch } from "../lib/apiFetch";
 
+function getClientSessionToken() {
+  if (typeof localStorage === "undefined") {
+    return null;
+  }
+
+  const stored = localStorage.getItem("client_session");
+  if (!stored) {
+    return null;
+  }
+
+  try {
+    const session = JSON.parse(stored);
+    return typeof session?.token === "string" ? session.token : null;
+  } catch {
+    return stored;
+  }
+}
+
 export async function getSession() {
   return apiFetch("/api/auth/me");
 }
 
 export async function refreshClientSession() {
-  const token = typeof localStorage !== "undefined" ? localStorage.getItem("client_session") : null;
+  const token = getClientSessionToken();
   if (!token) {
     return null;
   }
