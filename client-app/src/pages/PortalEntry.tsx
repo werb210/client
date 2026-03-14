@@ -149,7 +149,7 @@ export function PortalEntry() {
               <div style={components.form.helperText}>
                 Enter the 6-digit code sent to your phone.
               </div>
-              <OtpInput length={6} value={otpCode} onChange={setOtpCode} />
+              <OtpInput length={6} onComplete={setOtpCode} />
               <PrimaryButton
                 style={{ width: "100%" }}
                 onClick={handleVerifyOtp}
