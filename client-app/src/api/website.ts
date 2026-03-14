@@ -123,7 +123,7 @@ export async function submitCreditReadiness(payload: CreditReadinessPayload) {
     }
 
     const res = await postWithRetry(
-      "/api/readiness/submit",
+      "/api/readiness",
       payload,
       key !== "::" ? `readiness:${key}` : crypto.randomUUID()
     );
@@ -168,7 +168,7 @@ export async function submitContactForm(payload: {
   contactInFlight = (async () => {
     try {
       const res = await postWithRetry(
-        "/api/contact/submit",
+        "/api/contact",
         payload,
         key !== "::" ? `contact:${key}` : crypto.randomUUID()
       );

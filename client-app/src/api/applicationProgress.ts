@@ -54,7 +54,7 @@ export async function continueApplication(data: any) {
 }
 
 export async function submitApplication(data: any) {
-  return apiFetch("/api/readiness/submit", {
+  return apiFetch("/api/readiness", {
     method: "POST",
     body: JSON.stringify(data)
   });
