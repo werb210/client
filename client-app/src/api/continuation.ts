@@ -97,7 +97,7 @@ export async function fetchReadinessSession(sessionId: string): Promise<Continua
       return null;
     }
 
-    const fallback = await fetchWithRetry(`/api/readiness/session/${encodedSessionId}`);
+    const fallback = await fetchWithRetry(`/api/readiness/continue?sessionId=${encodedSessionId}`);
     if (!fallback.ok) return null;
     return (await fallback.json()) as ContinuationPayload;
   } catch {
@@ -110,7 +110,7 @@ export async function fetchReadinessBridge(
 ): Promise<ReadinessBridgePayload | null> {
   try {
     const encodedSessionToken = encodeURIComponent(sessionToken);
-    const response = await fetchWithRetry(`/api/readiness/bridge/${encodedSessionToken}`);
+    const response = await fetchWithRetry(`/api/readiness/continue?token=${encodedSessionToken}`);
     if (!response.ok) return null;
     return (await response.json()) as ReadinessBridgePayload;
   } catch {

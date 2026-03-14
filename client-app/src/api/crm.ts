@@ -19,5 +19,5 @@ export type LeadPayload = {
 };
 
 export async function createLead(payload: LeadPayload) {
-  return api.post("/crm/leads", payload);
+  return api.post("/api/crm/leads", payload);
 }

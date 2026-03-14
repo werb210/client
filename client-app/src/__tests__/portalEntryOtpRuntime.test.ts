@@ -9,7 +9,7 @@ const { startOtpMock, verifyOtpMock } = vi.hoisted(() => ({
   verifyOtpMock: vi.fn(),
 }));
 
-vi.mock("@/services/otpService", () => ({
+vi.mock("@/services/auth", () => ({
   startOtp: startOtpMock,
   verifyOtp: verifyOtpMock,
 }));
@@ -20,7 +20,7 @@ describe("PortalEntry OTP runtime", () => {
 
   beforeEach(() => {
     startOtpMock.mockReset();
-    startOtpMock.mockResolvedValue({ success: true, sessionId: "session-1" });
+    startOtpMock.mockResolvedValue({ ok: true, sessionToken: "session-1" });
     ClientProfileStore.setLastUsedPhone("(555) 111-2222");
 
     container = document.createElement("div");

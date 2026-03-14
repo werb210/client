@@ -46,11 +46,15 @@ export async function requestOtp(phone: string) {
   } satisfies OtpRequestResult;
 }
 
-export async function verifyOtp(sessionToken: string, code: string) {
+export async function startOtp(phone: string) {
+  return requestOtp(phone);
+}
+
+export async function verifyOtp(phoneOrSessionToken: string, code: string) {
   const data = (await apiRequest("/api/auth/otp/verify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionToken, code }),
+    body: JSON.stringify({ sessionToken: phoneOrSessionToken, phone: phoneOrSessionToken, code }),
   }).catch(() => null)) as ApiPayload;
 
   return {
