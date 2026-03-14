@@ -19,6 +19,7 @@ function normalizeRuntimeConfig(config: Partial<RuntimeConfig> = {}): RuntimeCon
   const apiOrigin =
     config.API_BASE_URL ||
     config.API_URL ||
+    import.meta.env.VITE_API_BASE ||
     import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
     DEFAULT_API_ORIGIN;
