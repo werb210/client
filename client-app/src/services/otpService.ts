@@ -24,10 +24,15 @@ export async function requestOtp(phone: string) {
 }
 
 export async function verifyOtp(phone: string, code: string) {
-  const normalizedPhone = normalizePhone(phone);
-
-  return apiClient.post("/api/auth/otp/verify", {
-    phone: normalizedPhone,
+  const response = await apiClient.post("/api/auth/otp/verify", {
+    phone: normalizePhone(phone),
     code,
   });
+
+  const token = response.data?.token || response.data?.sessionToken;
+  if (token && typeof localStorage !== "undefined") {
+    localStorage.setItem("client_session", token);
+  }
+
+  return response.data;
 }

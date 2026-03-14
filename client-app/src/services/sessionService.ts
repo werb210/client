@@ -5,6 +5,11 @@ export async function getSession() {
 }
 
 export async function refreshClientSession() {
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("client_session") : null;
+  if (!token) {
+    return null;
+  }
+
   return apiFetch("/api/client/session/refresh", {
     method: "POST"
   });

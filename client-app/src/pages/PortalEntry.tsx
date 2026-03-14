@@ -1,27 +1,21 @@
 // @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "../components/ui/Card";
 import { PhoneInput } from "../components/ui/PhoneInput";
 import { PrimaryButton } from "../components/ui/Button";
 import { OtpInput } from "../components/OtpInput";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { formatPhoneNumber, getCountryCode } from "../utils/location";
-import { resolveOtpNextStep } from "../auth/otp";
-import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { components, layout, scrollToFirstError } from "@/styles";
 import { startOtp, verifyOtp } from "@/services/otpService";
 import { setToken } from "@/auth/tokenStorage";
 import { ensureClientSession, setActiveClientSessionToken } from "@/state/clientSession";
 
 export function PortalEntry() {
-  const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [step, setStep] = useState<"phone" | "otp">("phone");
-  const [rateLimited, setRateLimited] = useState(false);
-  const [otpError, setOtpError] = useState("");
-  const [phoneError, setPhoneError] = useState("");
-  const [serverCode, setServerCode] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [error, setError] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const countryCode = useMemo(() => getCountryCode("United States"), []);
 
@@ -33,44 +27,47 @@ export function PortalEntry() {
   }, []);
 
   useEffect(() => {
-    if (phoneError || otpError) {
+    if (error) {
       scrollToFirstError();
     }
-  }, [otpError, phoneError]);
+  }, [error]);
 
   async function handleSendCode() {
     const normalized = phone.trim();
-    if (!normalized) {
-      setPhoneError("Enter the phone number used for your application.");
+    if (!normalized || sendingOtp) {
+      if (!normalized) {
+        setError("Enter the phone number used for your application.");
+      }
       return;
     }
-    setPhoneError("");
-    setServerCode("");
+
+    setSendingOtp(true);
+    setError("");
     setOtpCode("");
-    setRateLimited(false);
 
     try {
       await startOtp(normalized);
       setStep("otp");
     } catch (err: any) {
       if (err?.response?.status === 429) {
-        setRateLimited(true);
-        setPhoneError("Code already sent. Please wait before requesting another.");
+        setError("Code already sent. Please wait a moment.");
       } else {
-        setPhoneError("Unable to send code. Please try again.");
+        setError("Unable to send code. Please try again.");
       }
+    } finally {
+      setSendingOtp(false);
     }
   }
 
   async function handleVerify(code: string) {
+    setError("");
+
     try {
-      setOtpError("");
       const normalizedPhone = phone.trim();
-      const response = await verifyOtp(normalizedPhone, code);
-      const result = response?.data;
+      const result = await verifyOtp(normalizedPhone, code);
 
       if (!result?.success || !result?.sessionToken) {
-        setOtpError("Invalid code");
+        setError("Invalid code. Please try again.");
         return;
       }
 
@@ -84,28 +81,9 @@ export function PortalEntry() {
       });
 
       ClientProfileStore.setLastUsedPhone(normalizedPhone);
-      const nextStep = resolveOtpNextStep(ClientProfileStore.getProfile(normalizedPhone));
-
-      if (nextStep.action === "start") {
-        navigate("/dashboard");
-        return;
-      }
-
-      if (nextStep.action === "resume") {
-        navigate(`/continue/${nextStep.token}`);
-        return;
-      }
-
-      const token = nextStep.token;
-      const profile = ClientProfileStore.getProfile(normalizedPhone);
-      const applicationTokens = profile?.applicationTokens || [];
-      applicationTokens.forEach((entry) => ClientProfileStore.markPortalVerified(entry));
-      ClientProfileStore.markPortalVerified(token);
-      clearServiceWorkerCaches("otp").finally(() => {
-        navigate(`/status?token=${token}`);
-      });
+      window.location.href = "/portal";
     } catch (err) {
-      setOtpError("OTP verification failed");
+      setError("Invalid code. Please try again.");
     }
   }
 
@@ -128,7 +106,7 @@ export function PortalEntry() {
 
           {step === "phone" ? (
             <>
-              <div style={layout.stackTight} data-error={Boolean(phoneError)}>
+              <div style={layout.stackTight} data-error={Boolean(error)}>
                 <label htmlFor="portal-phone" style={components.form.label}>
                   Phone number
                 </label>
@@ -139,29 +117,23 @@ export function PortalEntry() {
                     setPhone(formatPhoneNumber(event.target.value, countryCode))
                   }
                   placeholder="(555) 555-5555"
-                  hasError={Boolean(phoneError)}
+                  hasError={Boolean(error)}
                   onKeyDown={(event: unknown) => {
                     if (event.key === "Enter") {
                       handleSendCode();
                     }
                   }}
                 />
-                {phoneError && (
+                {error && (
                   <div style={components.form.errorText} data-error={true}>
-                    {phoneError}
+                    {error}
                   </div>
                 )}
               </div>
 
-              <PrimaryButton style={{ width: "100%" }} onClick={handleSendCode}>
-                Send code
+              <PrimaryButton style={{ width: "100%" }} onClick={handleSendCode} disabled={sendingOtp}>
+                {sendingOtp ? "Sending..." : "Send code"}
               </PrimaryButton>
-
-              {rateLimited && (
-                <div style={components.form.helperText}>
-                  Please wait a moment before requesting another code.
-                </div>
-              )}
 
             </>
           ) : (
@@ -169,18 +141,13 @@ export function PortalEntry() {
               <div style={components.form.helperText}>
                 Enter the 6-digit code sent to your phone.
               </div>
-              {serverCode && (
-                <div style={components.form.helperText} data-testid="server-demo-code">
-                  Demo code: {serverCode}
-                </div>
-              )}
               <OtpInput length={6} onComplete={handleOtpComplete} />
               <PrimaryButton style={{ width: "100%" }} onClick={() => handleVerify(otpCode)}>
                 Verify code
               </PrimaryButton>
-              {otpError && (
+              {error && (
                 <div style={components.form.errorText} data-error={true}>
-                  {otpError}
+                  {error}
                 </div>
               )}
             </div>
