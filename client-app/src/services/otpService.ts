@@ -1,5 +1,3 @@
-import { apiClient } from "../lib/apiClient";
-
 function normalizePhone(input: string): string {
   const digits = input.replace(/\D/g, "");
   if (digits.length === 10) {
@@ -14,9 +12,20 @@ function normalizePhone(input: string): string {
 }
 
 export async function startOtp(phone: string) {
-  return apiClient.post("/api/auth/otp/start", {
-    phone: normalizePhone(phone),
+  const res = await fetch("/api/auth/request-otp", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ phone: normalizePhone(phone) })
   });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`OTP request failed ${res.status}: ${text}`);
+  }
+
+  return await res.json();
 }
 
 export async function requestOtp(phone: string) {
@@ -24,22 +33,32 @@ export async function requestOtp(phone: string) {
 }
 
 export async function verifyOtp(phone: string, code: string) {
-  const response = await apiClient.post("/api/auth/otp/verify", {
-    phone: normalizePhone(phone),
-    code,
+  const res = await fetch("/api/auth/verify-otp", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ phone: normalizePhone(phone), code })
   });
 
-  const token = response.data?.token || response.data?.sessionToken;
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`OTP verify failed ${res.status}: ${text}`);
+  }
+
+  const data = await res.json();
+
+  const token = data?.token || data?.sessionToken;
   if (token && typeof localStorage !== "undefined") {
     const session = {
       token,
       phone,
       authenticated: true,
-      createdAt: Date.now(),
+      createdAt: Date.now()
     };
 
     localStorage.setItem("client_session", JSON.stringify(session));
   }
 
-  return response.data;
+  return data;
 }
