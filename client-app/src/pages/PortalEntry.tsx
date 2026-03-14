@@ -15,6 +15,7 @@ export function PortalEntry() {
   const [phone, setPhone] = useState("");
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [error, setError] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const countryCode = useMemo(() => getCountryCode("United States"), []);
@@ -59,7 +60,16 @@ export function PortalEntry() {
     }
   }
 
-  async function handleVerify(code: string) {
+  async function handleVerifyOtp(code: string) {
+    if (verifyingOtp) {
+      return;
+    }
+
+    if (code.length !== 6) {
+      return;
+    }
+
+    setVerifyingOtp(true);
     setError("");
 
     try {
@@ -84,12 +94,13 @@ export function PortalEntry() {
       window.location.href = "/portal";
     } catch (err) {
       setError("Invalid code. Please try again.");
+    } finally {
+      setVerifyingOtp(false);
     }
   }
 
-  async function handleOtpComplete(code: string) {
+  function handleOtpChange(code: string) {
     setOtpCode(code);
-    await handleVerify(code);
   }
 
   return (
@@ -141,8 +152,12 @@ export function PortalEntry() {
               <div style={components.form.helperText}>
                 Enter the 6-digit code sent to your phone.
               </div>
-              <OtpInput length={6} onComplete={handleOtpComplete} />
-              <PrimaryButton style={{ width: "100%" }} onClick={() => handleVerify(otpCode)}>
+              <OtpInput length={6} onChange={handleOtpChange} onComplete={handleVerifyOtp} />
+              <PrimaryButton
+                style={{ width: "100%" }}
+                onClick={() => handleVerifyOtp(otpCode)}
+                disabled={verifyingOtp || otpCode.length !== 6}
+              >
                 Verify code
               </PrimaryButton>
               {error && (
