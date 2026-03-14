@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   build: {
     sourcemap: true,
@@ -10,7 +10,7 @@ export default defineConfig({
     target: "es2020",
   },
   esbuild: {
-    drop: process.env.NODE_ENV === "production" ? ["console", "debugger"] : [],
+    drop: mode === "production" ? ["console", "debugger"] : [],
   },
   resolve: {
     alias: {
@@ -22,4 +22,4 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
-});
+}));

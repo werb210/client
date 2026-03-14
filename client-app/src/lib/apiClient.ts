@@ -1,15 +1,13 @@
 import axios from "axios";
 import { API_TIMEOUT } from "../config/api";
-import { API_BASE } from "../config/apiBase";
 import { getRuntimeConfig } from "../config/runtimeConfig";
 
-function getConfiguredBase() {
-  if (API_BASE) {
-    return API_BASE.replace(/\/$/, "");
-  }
+const API_BASE =
+  import.meta.env.VITE_API_URL || "http://localhost:4000";
 
+function getConfiguredBase() {
   const { API_URL } = getRuntimeConfig();
-  return API_URL.replace(/\/$/, "");
+  return (API_URL || API_BASE).replace(/\/$/, "");
 }
 
 export function resolveApiUrl(path: string) {
@@ -32,7 +30,9 @@ export function resolveApiUrl(path: string) {
 }
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
-  const res = await fetch(resolveApiUrl(path), {
+  const url = `${API_BASE}${path}`;
+
+  const response = await fetch(url, {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -41,17 +41,18 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     ...options
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`API error ${res.status}: ${text}`);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`API error ${response.status}: ${text}`);
   }
 
-  const type = res.headers.get("content-type");
-  if (type && type.includes("application/json")) {
-    return res.json();
+  const contentType = response.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    return response.json();
   }
 
-  return res.text();
+  return response.text();
 }
 
 export const apiClient = axios.create({
