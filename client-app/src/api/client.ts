@@ -1,11 +1,10 @@
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import apiClient, { resolveApiUrl } from "@/lib/apiClient";
 import { apiRequest as request } from "./request";
-import { getRuntimeConfig } from "../config/runtimeConfig";
+import { runtimeConfig } from "../config/runtimeConfig";
 
 export function getApiBase(): string {
-  const { API_BASE_URL } = getRuntimeConfig();
-  return API_BASE_URL.replace(/\/$/, "");
+  return runtimeConfig.API_BASE.replace(/\/$/, "");
 }
 
 export const API_BASE = getApiBase();
