@@ -23,4 +23,7 @@ interface Window {
     data: Record<string, any>;
   };
   __APP_CONTINUATION_ERROR__?: string;
+  __ENV?: {
+    API_BASE?: string;
+  };
 }
