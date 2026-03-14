@@ -1,12 +1,4 @@
-import api from "@/api/client";
-
-export async function bootstrapContinuation() {
-  if (sessionStorage.getItem("continuation_checked")) return;
-
-  sessionStorage.setItem("continuation_checked", "true");
-
-  return fetchApplicationContinuation();
-}
+import { apiFetch } from "../lib/apiClient";
 
 export interface SaveApplicationStepPayload {
   applicationId: string;
@@ -21,11 +13,49 @@ export interface ContinuationSessionResponse {
   data?: Record<string, any>;
 }
 
+export async function bootstrapContinuation() {
+  if (sessionStorage.getItem("continuation_checked")) return;
+
+  sessionStorage.setItem("continuation_checked", "true");
+
+  return fetchApplicationContinuation();
+}
+
 export async function fetchApplicationContinuation() {
-  const response = await api.get<ContinuationSessionResponse>("/api/application/continuation");
-  return response.data;
+  return apiFetch("/api/application/continuation") as Promise<ContinuationSessionResponse>;
 }
 
 export async function saveApplicationStep(payload: SaveApplicationStepPayload) {
-  await api.post("/api/application", payload);
+  await apiFetch("/api/application", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function saveApplicationProgress(data: any) {
+  return apiFetch("/api/application", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+export async function updateApplication(data: any) {
+  return apiFetch("/api/application/update", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+export async function continueApplication(data: any) {
+  return apiFetch("/api/application/continuation", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+export async function submitApplication(data: any) {
+  return apiFetch("/api/readiness/submit", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
 }

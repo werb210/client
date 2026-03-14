@@ -1,8 +1,7 @@
 import axios from "axios";
 import { API_TIMEOUT } from "../config/api";
+import { API_BASE } from "../config/apiBase";
 import { getRuntimeConfig } from "../config/runtimeConfig";
-
-export const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 function getConfiguredBase() {
   if (API_BASE) {
@@ -47,7 +46,13 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     throw new Error(`API error ${res.status}: ${text}`);
   }
 
-  return res.json();
+  const contentType = res.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    return res.json();
+  }
+
+  return res.text();
 }
 
 export const apiClient = axios.create({

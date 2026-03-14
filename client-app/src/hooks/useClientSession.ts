@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import api from "@/api/client";
+import { apiFetch } from "../lib/apiClient";
 import {
   clearActiveClientSessionToken,
   ensureClientSession,
@@ -43,9 +43,12 @@ export function useClientSession(tokenOverride?: string | null): UseClientSessio
 
     const validateAndPersist = async () => {
       try {
-        const res = await api.post<{ valid?: boolean }>("/session", { token });
+        const res = await apiFetch("/session", {
+          method: "POST",
+          body: JSON.stringify({ token }),
+        });
         if (!active) return;
-        if (!res.data?.valid) {
+        if (!(res as { valid?: boolean })?.valid) {
           clearActiveClientSessionToken();
           setSession(null);
           setState("missing");
