@@ -14,7 +14,7 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    console.error("Client runtime error:", error, info);
+    console.error("Application crash:", error, info);
   }
 
   render() {
@@ -22,7 +22,6 @@ class ErrorBoundary extends React.Component<Props, State> {
       return (
         <div style={{ padding: 40 }}>
           <h2>Application Error</h2>
-          <p>An unexpected error occurred.</p>
           <p>Please refresh the page.</p>
         </div>
       );

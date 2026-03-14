@@ -8,6 +8,7 @@ import {
 import { OfflineStore } from "../state/offline";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { SessionGuard } from "../auth/sessionGuard";
+import PortalRoutes from "../routes/PortalRoutes";
 import { getOtpSession } from "../auth/session";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { useClientSession } from "../hooks/useClientSession";
@@ -209,21 +210,23 @@ export default function AppRouter(): JSX.Element {
           <Route path="/system-status" element={<SystemStatus />} />
           <Route path="/faq" element={<FAQPage />} />
           <Route path="/troubleshooting" element={<TroubleshootingPage />} />
-          <Route
-            path="/status"
-            element={
-              <RequirePortalSession>
-                <StatusPage />
-              </RequirePortalSession>
-            }
-          />
-          <Route path="/application/:id" element={<ApplicationPortalPage />} />
-          <Route path="/application/:id/offers" element={<ApplicationOffersPage />} />
-          <Route
-            path="/application/:id/documents"
-            element={<ApplicationPortalPage />}
-          />
-          <Route path="/resume" element={<ResumePage />} />
+          <Route element={<PortalRoutes />}>
+            <Route
+              path="/status"
+              element={
+                <RequirePortalSession>
+                  <StatusPage />
+                </RequirePortalSession>
+              }
+            />
+            <Route path="/application/:id" element={<ApplicationPortalPage />} />
+            <Route path="/application/:id/offers" element={<ApplicationOffersPage />} />
+            <Route
+              path="/application/:id/documents"
+              element={<ApplicationPortalPage />}
+            />
+            <Route path="/resume" element={<ResumePage />} />
+          </Route>
           <Route path="/continue/:token" element={<ContinueApplication />} />
           <Route path="/products/:slug" element={<ProductDetail />} />
           <Route path="/coming-soon" element={<ComingSoonPage />} />
