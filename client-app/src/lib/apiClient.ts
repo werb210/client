@@ -46,9 +46,8 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     throw new Error(`API error ${res.status}: ${text}`);
   }
 
-  const contentType = res.headers.get("content-type");
-
-  if (contentType && contentType.includes("application/json")) {
+  const type = res.headers.get("content-type");
+  if (type && type.includes("application/json")) {
     return res.json();
   }
 

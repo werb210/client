@@ -38,7 +38,7 @@ describe("website API dedupe", () => {
 
     await vi.waitFor(() => expect(postMock).toHaveBeenCalledTimes(1));
     expect(postMock).toHaveBeenCalledWith(
-      "/api/readiness/submit",
+      "/api/readiness",
       payload,
       expect.objectContaining({
         headers: expect.objectContaining({
@@ -185,7 +185,7 @@ describe("website API dedupe", () => {
 
     expect(postMock).toHaveBeenCalledTimes(1);
     expect(postMock).toHaveBeenCalledWith(
-      "/api/contact/submit",
+      "/api/contact",
       payload,
       expect.objectContaining({
         headers: expect.objectContaining({
