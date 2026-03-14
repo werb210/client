@@ -168,7 +168,7 @@ export async function submitContactForm(payload: {
   contactInFlight = (async () => {
     try {
       const res = await postWithRetry(
-        "/api/contact",
+        "/api/crm/web-leads",
         payload,
         key !== "::" ? `contact:${key}` : crypto.randomUUID()
       );

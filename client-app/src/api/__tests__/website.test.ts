@@ -185,7 +185,7 @@ describe("website API dedupe", () => {
 
     expect(postMock).toHaveBeenCalledTimes(1);
     expect(postMock).toHaveBeenCalledWith(
-      "/api/contact",
+      "/api/crm/web-leads",
       payload,
       expect.objectContaining({
         headers: expect.objectContaining({
