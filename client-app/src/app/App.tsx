@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { BrowserRouter, useInRouterContext } from "react-router-dom";
 import AppRouter from "../router/AppRouter";
 import { Header } from "../components/Header";
 import { OfflineBanner } from "../components/OfflineBanner";
@@ -30,6 +31,7 @@ import CallUsButton from "@/telephony/components/CallUsButton";
 import { getCallStatus } from "@/services/telephonyService";
 
 export default function App() {
+  const hasRouterContext = useInRouterContext();
   const { app, loadFromServer, update } = useApplicationStore();
   const appRef = useRef(app);
   const refreshing = useSessionRefreshing();
@@ -197,7 +199,7 @@ export default function App() {
     return <SessionRefreshOverlay />;
   }
 
-  return (
+  const appContent = (
     <div className="min-h-screen bg-brand-bg text-white flex flex-col">
       <Header />
       <OfflineBanner />
@@ -230,4 +232,10 @@ export default function App() {
       <ChatSupportWidget />
     </div>
   );
+
+  if (!hasRouterContext) {
+    return <BrowserRouter>{appContent}</BrowserRouter>;
+  }
+
+  return appContent;
 }
