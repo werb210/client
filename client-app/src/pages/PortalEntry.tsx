@@ -6,7 +6,7 @@ import { OtpInput } from "../components/OtpInput";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { formatPhoneNumber, getCountryCode } from "../utils/location";
 import { components, layout, scrollToFirstError } from "@/styles";
-import { startOtp, verifyOtp } from "@/services/otpService";
+import { sendOtp, verifyOtp } from "@/services/otpService";
 import { setToken } from "@/auth/tokenStorage";
 import { ensureClientSession, setActiveClientSessionToken } from "@/state/clientSession";
 
@@ -47,7 +47,7 @@ export function PortalEntry() {
     setVerifying(false);
 
     try {
-      await startOtp(normalized);
+      await sendOtp(normalized);
       setStep("code");
     } catch (err: any) {
       if (err?.response?.status === 429) {
