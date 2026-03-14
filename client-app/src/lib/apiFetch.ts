@@ -5,9 +5,9 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...(options.headers || {})
+      ...(options.headers || {}),
     },
-    ...options
+    ...options,
   });
 
   if (!res.ok) {
