@@ -1,48 +1,50 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
+import { normalizePhone } from "../utils/normalizePhone";
 
-export async function startOtp(phone: string) {
-  const res = await fetch(`${API_BASE}/api/auth/request-otp`, {
+const API = "https://server.boreal.financial/api/auth";
+
+export async function requestOtp(phone: string) {
+  const normalized = normalizePhone(phone);
+
+  const res = await fetch(`${API}/request-otp`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ phone })
+    body: JSON.stringify({
+      phone: normalized,
+    }),
   });
 
-  let data = null;
-
-  try {
-    data = await res.json();
-  } catch {
-    throw new Error("Server returned invalid JSON for OTP request");
-  }
-
   if (!res.ok) {
-    throw new Error(data?.error || `OTP request failed (${res.status})`);
+    const text = await res.text();
+    throw new Error(`OTP request failed: ${text}`);
   }
 
-  return data;
+  return res.json();
+}
+
+export async function startOtp(phone: string) {
+  return requestOtp(phone);
 }
 
 export async function verifyOtp(phone: string, code: string) {
-  const payload = {
-    phone: String(phone).trim(),
-    code: String(code).trim()
-  };
+  const normalized = normalizePhone(phone);
 
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/verify-otp`, {
+  const res = await fetch(`${API}/verify-otp`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    credentials: "include",
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      phone: normalized,
+      code,
+    }),
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => null);
-    throw new Error(error?.message || `OTP verification failed (${response.status})`);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`OTP verification failed: ${text}`);
   }
 
-  return response.json();
+  return res.json();
 }

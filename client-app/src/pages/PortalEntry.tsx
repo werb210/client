@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { Card } from "../components/ui/Card";
 import { PhoneInput } from "../components/ui/PhoneInput";
 import { PrimaryButton } from "../components/ui/Button";
@@ -13,7 +12,7 @@ import { ensureClientSession, setActiveClientSessionToken } from "@/state/client
 
 export function PortalEntry() {
   const [phone, setPhone] = useState("");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [step, setStep] = useState<"phone" | "code">("phone");
   const [sendingOtp, setSendingOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -49,7 +48,7 @@ export function PortalEntry() {
 
     try {
       await startOtp(normalized);
-      setStep("otp");
+      setStep("code");
     } catch (err: any) {
       if (err?.response?.status === 429) {
         setError("Code already sent. Please wait a moment.");
@@ -122,12 +121,12 @@ export function PortalEntry() {
                 <PhoneInput
                   id="portal-phone"
                   value={formatPhoneNumber(phone, countryCode)}
-                  onChange={(event: unknown) =>
+                  onChange={(event: ChangeEvent<HTMLInputElement>) =>
                     setPhone(formatPhoneNumber(event.target.value, countryCode))
                   }
                   placeholder="(555) 555-5555"
                   hasError={Boolean(error)}
-                  onKeyDown={(event: unknown) => {
+                  onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
                     if (event.key === "Enter") {
                       handleSendCode();
                     }
