@@ -15,9 +15,8 @@ export function PortalEntry() {
   const [phone, setPhone] = useState("");
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [sendingOtp, setSendingOtp] = useState(false);
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpSubmitted, setOtpSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const [otpCode, setOtpCode] = useState("");
   const countryCode = useMemo(() => getCountryCode("United States"), []);
 
   useEffect(() => {
@@ -44,7 +43,7 @@ export function PortalEntry() {
 
     setSendingOtp(true);
     setError("");
-    setOtpCode("");
+    setOtpSubmitted(false);
 
     try {
       await startOtp(normalized);
@@ -61,15 +60,15 @@ export function PortalEntry() {
   }
 
   async function handleVerifyOtp(code: string) {
-    if (verifyingOtp) {
+    if (otpSubmitted) {
       return;
     }
 
-    if (code.length !== 6) {
+    if (!code || code.length !== 6) {
       return;
     }
 
-    setVerifyingOtp(true);
+    setOtpSubmitted(true);
     setError("");
 
     try {
@@ -77,6 +76,7 @@ export function PortalEntry() {
       const result = await verifyOtp(normalizedPhone, code);
 
       if (!result?.success || !result?.sessionToken) {
+        setOtpSubmitted(false);
         setError("Invalid code. Please try again.");
         return;
       }
@@ -93,14 +93,9 @@ export function PortalEntry() {
       ClientProfileStore.setLastUsedPhone(normalizedPhone);
       window.location.href = "/portal";
     } catch (err) {
+      setOtpSubmitted(false);
       setError("Invalid code. Please try again.");
-    } finally {
-      setVerifyingOtp(false);
     }
-  }
-
-  function handleOtpChange(code: string) {
-    setOtpCode(code);
   }
 
   return (
@@ -152,14 +147,7 @@ export function PortalEntry() {
               <div style={components.form.helperText}>
                 Enter the 6-digit code sent to your phone.
               </div>
-              <OtpInput length={6} onChange={handleOtpChange} onComplete={handleVerifyOtp} />
-              <PrimaryButton
-                style={{ width: "100%" }}
-                onClick={() => handleVerifyOtp(otpCode)}
-                disabled={verifyingOtp || otpCode.length !== 6}
-              >
-                Verify code
-              </PrimaryButton>
+              <OtpInput length={6} onComplete={handleVerifyOtp} />
               {error && (
                 <div style={components.form.errorText} data-error={true}>
                   {error}
