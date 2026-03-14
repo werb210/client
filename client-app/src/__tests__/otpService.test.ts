@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { startOtp, verifyOtp } from "../services/otpService";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "";
 
 describe("otpService", () => {
   afterEach(() => {
@@ -34,6 +34,7 @@ describe("otpService", () => {
     expect(fetchSpy).toHaveBeenCalledWith(`${API_BASE}/api/auth/verify-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ phone: "+15551112222", code: "123456" })
     });
   });
