@@ -1,8 +1,4 @@
-import { getRuntimeConfig } from "./runtimeConfig";
-
-export function getApiBase() {
-  const { API_BASE_URL } = getRuntimeConfig();
-  return API_BASE_URL.replace(/\/$/, "");
-}
-
-export const API_BASE = getApiBase();
+export const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  window?.__ENV?.API_BASE ||
+  "";
