@@ -12,6 +12,7 @@ import QuickContact from "../components/QuickContact";
 import { useSessionRefreshing } from "../hooks/useSessionRefreshing";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { applyServiceWorkerUpdate } from "../pwa/serviceWorker";
+import type { InitialSession } from "./bootstrap";
 import { hydratePortalSessionsFromIndexedDb } from "../state/portalSessions";
 import { useExitIntent } from "../hooks/useExitIntent";
 import {
@@ -29,12 +30,19 @@ import { initializeVoice } from "@/telephony/voiceClient";
 import CallUsButton from "@/telephony/components/CallUsButton";
 import { getCallStatus } from "@/services/telephonyService";
 import { safeFetch } from "@/utils/safeFetch";
+import { getToken, setToken } from "@/auth/tokenStorage";
 
-export default function App() {
+type AppProps = {
+  initialSession?: InitialSession | null;
+};
+
+export default function App({ initialSession = null }: AppProps) {
   const { app, loadFromServer, update } = useApplicationStore();
   const appRef = useRef(app);
   const refreshing = useSessionRefreshing();
   const updateAvailable = useServiceWorkerUpdate();
+  const [session] = useState<InitialSession | null>(initialSession);
+  const [loading, setLoading] = useState(true);
   const [continuationError, setContinuationError] = useState<string | null>(null);
   const hasInitializedClientVoice = useRef(false);
   const pathname = typeof window !== "undefined" ? window.location.pathname : "";
@@ -77,6 +85,14 @@ export default function App() {
   }, [update]);
 
   useReadinessBridge(setStep1Data, setStep3Data, setStep4Data, !isOtpScreen);
+
+  useEffect(() => {
+    if (session?.token && !getToken()) {
+      setToken(session.token);
+    }
+
+    setLoading(false);
+  }, [session]);
 
   const debugUpdateAvailable =
     typeof window !== "undefined" &&
@@ -192,6 +208,11 @@ export default function App() {
         // ignore prefill fetch failures
       });
   }, []);
+
+  if (loading) {
+    return null;
+  }
+
   if (refreshing) {
     return <SessionRefreshOverlay />;
   }
