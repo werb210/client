@@ -10,18 +10,18 @@ import { formatPhoneNumber, getCountryCode } from "../utils/location";
 import { resolveOtpNextStep } from "../auth/otp";
 import { clearServiceWorkerCaches } from "../pwa/serviceWorker";
 import { components, layout, scrollToFirstError } from "@/styles";
-import { verifyOtp, requestOtp } from "@/services/otpService";
+import { startOtp, verifyOtp } from "@/services/otpService";
 import { setToken } from "@/auth/tokenStorage";
 import { ensureClientSession, setActiveClientSessionToken } from "@/state/clientSession";
 
 export function PortalEntry() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
-  const [showOtp, setShowOtp] = useState(false);
+  const [otpRequested, setOtpRequested] = useState(false);
   const [otpError, setOtpError] = useState("");
-  const [sessionToken, setSessionToken] = useState<string>("");
   const [phoneError, setPhoneError] = useState("");
   const [serverCode, setServerCode] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const countryCode = useMemo(() => getCountryCode("United States"), []);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export function PortalEntry() {
     }
   }, [otpError, phoneError]);
 
-  async function handleSendOtp() {
+  async function handleSendCode() {
     const normalized = phone.trim();
     if (!normalized) {
       setPhoneError("Enter the phone number used for your application.");
@@ -45,11 +45,11 @@ export function PortalEntry() {
     }
     setPhoneError("");
     setServerCode("");
+    setOtpCode("");
 
     try {
-      const token = await requestOtp(normalized);
-      setSessionToken(token);
-      setShowOtp(true);
+      await startOtp(normalized);
+      setOtpRequested(true);
     } catch (error) {
       setPhoneError("Unable to send code. Please try again.");
     }
@@ -59,12 +59,15 @@ export function PortalEntry() {
     try {
       setOtpError("");
       const normalizedPhone = phone.trim();
-      const result = await verifyOtp(sessionToken, code);
+      const response = await verifyOtp(normalizedPhone, code);
+      const result = response?.data;
 
-      if (!result?.success) {
+      if (!result?.success || !result?.sessionToken) {
         setOtpError("Invalid code");
         return;
       }
+
+      const sessionToken = result.sessionToken as string;
 
       setToken(sessionToken);
       setActiveClientSessionToken(sessionToken);
@@ -99,6 +102,11 @@ export function PortalEntry() {
     }
   }
 
+  async function handleOtpComplete(code: string) {
+    setOtpCode(code);
+    await handleVerify(code);
+  }
+
   return (
     <div style={layout.page}>
       <div style={layout.centerColumn}>
@@ -111,54 +119,51 @@ export function PortalEntry() {
             </p>
           </div>
 
-          <div style={layout.stackTight} data-error={Boolean(phoneError)}>
-            <label htmlFor="portal-phone" style={components.form.label}>
-              Phone number
-            </label>
-            <PhoneInput
-              id="portal-phone"
-              value={formatPhoneNumber(phone, countryCode)}
-              onChange={(event: unknown) =>
-                setPhone(formatPhoneNumber(event.target.value, countryCode))
-              }
-              placeholder="(555) 555-5555"
-              hasError={Boolean(phoneError)}
-              onKeyDown={(event: unknown) => {
-                if (event.key === "Enter") {
-                  handleSendOtp();
-                }
-              }}
-            />
-            {phoneError && (
-              <div style={components.form.errorText} data-error={true}>
-                {phoneError}
-              </div>
-            )}
-          </div>
-
-          {!showOtp && (
-            <PrimaryButton style={{ width: "100%" }} onClick={handleSendOtp}>
-              Send code
-            </PrimaryButton>
-          )}
-
-          {showOtp && (
-            <div style={layout.stackTight}>
-              {!sessionToken ? (
-                <div>Requesting verification code...</div>
-              ) : (
-                <>
-                  <div style={components.form.helperText}>
-                    Enter the 6-digit code sent to your phone.
+          {!otpRequested ? (
+            <>
+              <div style={layout.stackTight} data-error={Boolean(phoneError)}>
+                <label htmlFor="portal-phone" style={components.form.label}>
+                  Phone number
+                </label>
+                <PhoneInput
+                  id="portal-phone"
+                  value={formatPhoneNumber(phone, countryCode)}
+                  onChange={(event: unknown) =>
+                    setPhone(formatPhoneNumber(event.target.value, countryCode))
+                  }
+                  placeholder="(555) 555-5555"
+                  hasError={Boolean(phoneError)}
+                  onKeyDown={(event: unknown) => {
+                    if (event.key === "Enter") {
+                      handleSendCode();
+                    }
+                  }}
+                />
+                {phoneError && (
+                  <div style={components.form.errorText} data-error={true}>
+                    {phoneError}
                   </div>
-                  {serverCode && (
-                    <div style={components.form.helperText} data-testid="server-demo-code">
-                      Demo code: {serverCode}
-                    </div>
-                  )}
-                  <OtpInput onComplete={handleVerify} />
-                </>
+                )}
+              </div>
+
+              <PrimaryButton style={{ width: "100%" }} onClick={handleSendCode}>
+                Send code
+              </PrimaryButton>
+            </>
+          ) : (
+            <div style={layout.stackTight}>
+              <div style={components.form.helperText}>
+                Enter the 6-digit code sent to your phone.
+              </div>
+              {serverCode && (
+                <div style={components.form.helperText} data-testid="server-demo-code">
+                  Demo code: {serverCode}
+                </div>
               )}
+              <OtpInput length={6} onComplete={handleOtpComplete} />
+              <PrimaryButton style={{ width: "100%" }} onClick={() => handleVerify(otpCode)}>
+                Verify code
+              </PrimaryButton>
               {otpError && (
                 <div style={components.form.errorText} data-error={true}>
                   {otpError}
