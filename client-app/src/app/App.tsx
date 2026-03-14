@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BrowserRouter, useInRouterContext } from "react-router-dom";
 import AppRouter from "../router/AppRouter";
 import { Header } from "../components/Header";
 import { OfflineBanner } from "../components/OfflineBanner";
@@ -25,13 +24,13 @@ import { persistAttributionFromUrl } from "../utils/attribution";
 import ChatSupportWidget from "@/components/ChatSupportWidget";
 import { useApplicationStore } from "../state/useApplicationStore";
 import { useReadinessBridge } from "@/hooks/useReadinessBridge";
-import { apiRequest } from "@/api/client";
+import { buildApiUrl } from "@/api/client";
 import { initializeVoice } from "@/telephony/voiceClient";
 import CallUsButton from "@/telephony/components/CallUsButton";
 import { getCallStatus } from "@/services/telephonyService";
+import { safeFetch } from "@/utils/safeFetch";
 
 export default function App() {
-  const hasRouterContext = useInRouterContext();
   const { app, loadFromServer, update } = useApplicationStore();
   const appRef = useRef(app);
   const refreshing = useSessionRefreshing();
@@ -185,7 +184,7 @@ export default function App() {
 
     if (!session) return;
 
-    void apiRequest(`/credit-readiness/session/${session}`)
+    void safeFetch(buildApiUrl(`/credit-readiness/session/${session}`))
       .then((data) => {
         localStorage.setItem("creditPrefill", JSON.stringify(data));
       })
@@ -193,8 +192,6 @@ export default function App() {
         // ignore prefill fetch failures
       });
   }, []);
-
-
   if (refreshing) {
     return <SessionRefreshOverlay />;
   }
@@ -232,10 +229,6 @@ export default function App() {
       <ChatSupportWidget />
     </div>
   );
-
-  if (!hasRouterContext) {
-    return <BrowserRouter>{appContent}</BrowserRouter>;
-  }
 
   return appContent;
 }
