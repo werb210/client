@@ -1,4 +1,4 @@
-import { apiFetch } from "../lib/apiClient";
+import { apiFetch } from "../lib/apiFetch";
 
 export interface SaveApplicationStepPayload {
   applicationId: string;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { apiFetch } from "../lib/apiClient";
+import { apiFetch } from "../lib/apiFetch";
 import {
   clearActiveClientSessionToken,
   ensureClientSession,
