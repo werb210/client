@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createApplication } from "../../services/applicationService";
+import { setApplicationId } from "../../utils/applicationSession";
 
 export default function ApplicationStep1() {
   const [companyName, setCompanyName] = useState("");
@@ -7,11 +8,18 @@ export default function ApplicationStep1() {
   const [email, setEmail] = useState("");
 
   const submit = async () => {
-    await createApplication({
+    const response = await createApplication({
       companyName,
       contactName,
       email,
     });
+    const applicationId = response?.id || response?.applicationId || "";
+    if (applicationId) {
+      setApplicationId(applicationId);
+      window.location.href = "/apply/start/step-2";
+      return;
+    }
+
     alert("Application started");
   };
 

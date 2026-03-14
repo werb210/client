@@ -50,6 +50,7 @@ const Step4 = lazy(() => import("../wizard/Step4_ApplicantInformation"));
 const Step5 = lazy(() => import("../wizard/Step5_Documents"));
 const Step6 = lazy(() => import("../wizard/Step6_TermsSignature"));
 const ApplicationStep1 = lazy(() => import("../pages/application/ApplicationStep1"));
+const ApplicationStep2 = lazy(() => import("../pages/application/ApplicationStep2"));
 
 type GuardProps = {
   children: JSX.Element;
@@ -229,6 +230,7 @@ export default function AppRouter(): JSX.Element {
           <Route path="/apply/success" element={<PublicApplySuccessPage />} />
           <Route path="/apply/confirmation" element={<ConfirmationPage />} />
           <Route path="/apply/start" element={<ApplicationStep1 />} />
+          <Route path="/apply/start/step-2" element={<ApplicationStep2 />} />
 
           <Route
             path="/apply"
