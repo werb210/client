@@ -4,4 +4,5 @@ export const API_TIMEOUT = 30000;
 
 export const API_BASE =
   import.meta.env.VITE_API_URL ||
-  "http://localhost:4000";
+  window.RUNTIME_CONFIG?.API_BASE_URL ||
+  "/api";

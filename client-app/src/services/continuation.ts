@@ -6,7 +6,7 @@ export interface ContinuationResponse {
 
 export async function checkContinuation(email: string): Promise<ContinuationResponse> {
   const res = await api.get<ContinuationResponse>(
-    `/lead/continuation?email=${encodeURIComponent(email)}`
+    `/api/application/continuation?email=${encodeURIComponent(email)}`
   );
   return res.data;
 }

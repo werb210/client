@@ -64,7 +64,7 @@ describe("continuation mapping", () => {
     expect(response).toEqual({ companyName: "Acme" });
   });
 
-  it("loads readiness bridge data from /api/readiness/bridge/:sessionToken", async () => {
+  it("loads readiness bridge data from /api/readiness/continue?token=:sessionToken", async () => {
     fetchWithRetryMock.mockResolvedValue({
       ok: true,
       json: async () => ({ step1: { industry: "Construction" } }),
@@ -72,7 +72,7 @@ describe("continuation mapping", () => {
 
     const response = await fetchReadinessBridge("bridge-token-1");
 
-    expect(fetchWithRetryMock).toHaveBeenCalledWith("/api/readiness/bridge/bridge-token-1");
+    expect(fetchWithRetryMock).toHaveBeenCalledWith("/api/readiness/continue?token=bridge-token-1");
     expect(response).toEqual({ step1: { industry: "Construction" } });
   });
 
@@ -84,7 +84,7 @@ describe("continuation mapping", () => {
     expect(response).toBeNull();
   });
 
-  it("falls back to /api/readiness/session/:sessionId when primary route is not found", async () => {
+  it("falls back to /api/readiness/continue when primary route is not found", async () => {
     fetchWithRetryMock
       .mockResolvedValueOnce({ ok: false, status: 404 } as Response)
       .mockResolvedValueOnce({
@@ -95,7 +95,7 @@ describe("continuation mapping", () => {
     const response = await fetchReadinessSession("session-2");
 
     expect(fetchWithRetryMock).toHaveBeenNthCalledWith(1, "/api/readiness/session-2");
-    expect(fetchWithRetryMock).toHaveBeenNthCalledWith(2, "/api/readiness/session/session-2");
+    expect(fetchWithRetryMock).toHaveBeenNthCalledWith(2, "/api/readiness/continue?sessionId=session-2");
     expect(response).toEqual({ companyName: "Fallback" });
   });
 });

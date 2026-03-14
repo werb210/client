@@ -6,7 +6,7 @@ import { OtpInput } from "../components/OtpInput";
 import { ClientProfileStore } from "../state/clientProfiles";
 import { formatPhoneNumber, getCountryCode } from "../utils/location";
 import { components, layout, scrollToFirstError } from "@/styles";
-import { sendOtp, verifyOtp } from "@/services/otpService";
+import { startOtp, verifyOtp } from "@/services/auth";
 import { setToken } from "@/auth/tokenStorage";
 import { ensureClientSession, setActiveClientSessionToken } from "@/state/clientSession";
 
@@ -47,7 +47,7 @@ export function PortalEntry() {
     setVerifying(false);
 
     try {
-      await sendOtp(normalized);
+      await startOtp(normalized);
       setStep("code");
     } catch (err: any) {
       if (err?.response?.status === 429) {
@@ -77,7 +77,7 @@ export function PortalEntry() {
       const code = String(otpCode).trim();
       const result = await verifyOtp(normalizedPhone, code);
 
-      if (!result?.success || !result?.sessionToken) {
+      if (!result?.ok || !result?.sessionToken) {
         setError("Invalid code. Please try again.");
         return;
       }

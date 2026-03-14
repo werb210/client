@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-const DEFAULT_API_ORIGIN = "https://server.boreal.financial/api";
+const DEFAULT_API_ORIGIN = "/api";
 
 let runtimeConfig: RuntimeConfig | null = null;
 let runtimeConfigPromise: Promise<RuntimeConfig> | null = null;
