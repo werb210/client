@@ -65,7 +65,21 @@ export async function clientApi(path: string, options: RequestInit = {}) {
 
 export async function apiRequest(path: string, options: RequestInit = {}) {
   const response = await request(path, options);
-  return response.json();
+
+  if (!response.ok) {
+    return {};
+  }
+
+  try {
+    const text = await response.text();
+    if (!text) {
+      return {};
+    }
+
+    return JSON.parse(text);
+  } catch {
+    return {};
+  }
 }
 
 type ApiResponse<T = unknown> = Promise<AxiosResponse<T>>;
