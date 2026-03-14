@@ -1,4 +1,4 @@
-import axios from "axios";
+import { apiClient } from "@/api/apiClient";
 
 export interface CreditPrefill {
   companyName: string;
@@ -15,7 +15,7 @@ export interface CreditPrefill {
 
 export async function fetchPrefill(token: string): Promise<CreditPrefill | null> {
   try {
-    const res = await axios.post("/api/prefill/validate", { token });
+    const res = await apiClient.post("/prefill/validate", { token });
     return res.data || null;
   } catch {
     return null;

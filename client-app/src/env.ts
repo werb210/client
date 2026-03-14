@@ -1,7 +1,7 @@
-import { getRuntimeConfig } from "./config/runtimeConfig";
+import { runtimeConfig } from "./config/runtimeConfig";
 
 export const ENV = {
   get API_BASE_URL() {
-    return getRuntimeConfig().API_BASE_URL;
+    return runtimeConfig.API_BASE;
   },
 };

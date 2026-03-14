@@ -1,21 +1,18 @@
 import axios from "axios";
-import { API_TIMEOUT } from "../config/api";
+import { runtimeConfig } from "@/config/runtimeConfig";
 
-export const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  window.RUNTIME_CONFIG?.API_BASE_URL ||
-  "/api";
-
-function getConfiguredBase() {
-  return API_BASE.replace(/\/$/, "");
-}
+export const apiClient = axios.create({
+  baseURL: runtimeConfig.API_BASE,
+  withCredentials: true
+});
 
 export function resolveApiUrl(path: string) {
-  if (!path) return getConfiguredBase();
+  if (!path) return runtimeConfig.API_BASE;
   if (/^https?:\/\//.test(path)) return path;
 
-  const base = getConfiguredBase();
+  const base = runtimeConfig.API_BASE.replace(/\/$/, "");
   let normalizedPath = path.startsWith("/") ? path : `/${path}`;
+
   if (base.endsWith("/api") && normalizedPath.startsWith("/api/")) {
     normalizedPath = normalizedPath.replace(/^\/api/, "");
   }
@@ -46,22 +43,12 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   return response.text();
 }
 
-export const apiClient = axios.create({
-  timeout: API_TIMEOUT,
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-apiClient.interceptors.request.use((config) => {
-  config.baseURL = getConfiguredBase();
-  return config;
-});
-
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => Promise.reject(error)
+  r => r,
+  err => {
+    import("@/utils/apiErrorHandler").then(m => m.handleApiError(err));
+    return Promise.reject(err);
+  }
 );
 
 export default apiClient;
