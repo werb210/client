@@ -1,7 +1,7 @@
 import { apiFetch } from "../lib/apiFetch";
 
 export async function getSession() {
-  return apiFetch("/session");
+  return apiFetch("/api/auth/me");
 }
 
 export async function refreshClientSession() {

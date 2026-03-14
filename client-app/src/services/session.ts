@@ -1,7 +1,7 @@
 import { apiFetch } from "../lib/apiFetch";
 
 export function getSession() {
-  return apiFetch("/session");
+  return apiFetch("/api/auth/me");
 }
 
 export function startOtp(phone: string) {

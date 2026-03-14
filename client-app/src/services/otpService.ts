@@ -1,7 +1,7 @@
-import axios from "axios";
+import { apiClient } from "../lib/apiClient";
 
 export async function requestOtp(phone: string) {
-  const res = await axios.post("/api/auth/otp/start", {
+  const res = await apiClient.post("/api/auth/otp/start", {
     phone,
   });
 
@@ -20,7 +20,7 @@ export async function verifyOtp(sessionToken: string, otp: string) {
     };
   }
 
-  const res = await axios.post("/api/auth/otp/verify", {
+  const res = await apiClient.post("/api/auth/otp/verify", {
     sessionToken,
     code: otp,
   });
