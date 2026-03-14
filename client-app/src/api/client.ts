@@ -1,5 +1,5 @@
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
-import apiClient from "@/lib/apiClient";
+import apiClient, { resolveApiUrl } from "@/lib/apiClient";
 import { apiRequest as request } from "./request";
 import { getRuntimeConfig } from "../config/runtimeConfig";
 
@@ -8,7 +8,7 @@ export function getApiBase(): string {
   return API_BASE_URL.replace(/\/$/, "");
 }
 
-export const API_BASE = getApiBase;
+export const API_BASE = getApiBase();
 
 export function buildApiUrl(path: string): string {
   const base = getApiBase();
@@ -51,7 +51,7 @@ function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
 }
 
 function normalizePath(path: string) {
-  return buildApiUrl(path);
+  return resolveApiUrl(path);
 }
 
 export async function clientApi(path: string, options: RequestInit = {}) {

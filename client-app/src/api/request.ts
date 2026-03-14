@@ -1,27 +1,7 @@
-import { getRuntimeConfig } from "../config/runtimeConfig";
-
-function getApiOrigin() {
-  const { API_BASE_URL } = getRuntimeConfig();
-  return API_BASE_URL.replace(/\/$/, "");
-}
-
-function normalizeApiPath(path: string, base: string) {
-  let normalized = path;
-
-  if (!normalized.startsWith("/")) {
-    normalized = `/${normalized}`;
-  }
-
-  if (base.endsWith("/api") && normalized.startsWith("/api/")) {
-    return normalized.replace(/^\/api/, "");
-  }
-
-  return normalized;
-}
+import { resolveApiUrl } from "../lib/apiClient";
 
 export function apiUrl(path: string) {
-  const base = getApiOrigin();
-  return `${base}${normalizeApiPath(path, base)}`;
+  return resolveApiUrl(path);
 }
 
 export function apiRequest(path: string, options: RequestInit = {}) {
@@ -38,5 +18,5 @@ export function apiRequest(path: string, options: RequestInit = {}) {
 }
 
 export function getApiBaseUrl() {
-  return getApiOrigin();
+  return apiUrl("");
 }

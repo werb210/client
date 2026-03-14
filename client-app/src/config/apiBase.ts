@@ -5,4 +5,4 @@ export function getApiBase() {
   return API_BASE_URL.replace(/\/$/, "");
 }
 
-export const API_BASE = getApiBase;
+export const API_BASE = getApiBase();
