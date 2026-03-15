@@ -1,7 +1,7 @@
-import { API_BASE } from "../config/apiBase";
+import { resolveApiUrl } from "@/api/apiClient";
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(resolveApiUrl(path), {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
