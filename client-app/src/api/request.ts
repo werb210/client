@@ -1,56 +1,63 @@
-import { resolveApiUrl } from "../lib/apiClient";
+import type { AxiosRequestHeaders } from "axios";
+import { apiClient, buildApiUrl } from "./client";
 
 function getClientSessionToken() {
-  if (typeof localStorage === "undefined") {
-    return null;
-  }
+  if (typeof localStorage === "undefined") return null;
 
   const stored = localStorage.getItem("client_session");
-  if (!stored) {
-    return null;
-  }
+  if (!stored) return null;
 
   try {
     const session = JSON.parse(stored);
-    if (typeof session?.token === "string") {
-      return session.token;
-    }
+    if (typeof session?.token === "string") return session.token;
   } catch {
-    if (typeof stored === "string") {
-      return stored;
-    }
+    if (typeof stored === "string") return stored;
   }
 
   return null;
 }
 
-export function apiUrl(path: string) {
-  return resolveApiUrl(path);
+function toHeaders(headers?: HeadersInit): AxiosRequestHeaders {
+  if (!headers) return { "Content-Type": "application/json" } as AxiosRequestHeaders;
+
+  const parsed = new Headers(headers);
+  const result: Record<string, string> = { "Content-Type": "application/json" };
+  parsed.forEach((value, key) => {
+    result[key] = value;
+  });
+  return result as AxiosRequestHeaders;
 }
 
-export async function apiRequest(path: string, options: RequestInit = {}) {
-  const url = apiUrl(path);
-  const token = getClientSessionToken();
-  const headers = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
-  };
+function toData(body?: BodyInit | null) {
+  if (typeof body !== "string") {
+    return body;
+  }
 
   try {
-    return await fetch(url, {
-      credentials: "include",
-      headers,
-      ...options,
-    });
+    return JSON.parse(body);
   } catch {
-    return new Response("{}", {
-      status: 503,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return body;
   }
+}
+
+export function apiUrl(path: string) {
+  return buildApiUrl(path);
+}
+
+export async function apiRequest<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = getClientSessionToken();
+  const response = await apiClient.request<T>({
+    url: path,
+    method: options.method || "GET",
+    data: toData(options.body),
+    headers: {
+      ...toHeaders(options.headers),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    withCredentials: true,
+  });
+
+  return response.data;
 }
 
 export function getApiBaseUrl() {

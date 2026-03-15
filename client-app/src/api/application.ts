@@ -1,19 +1,19 @@
-import { apiFetch } from "../lib/apiFetch";
+import { apiRequest } from "./client";
 
 export function createApplication(data: any) {
-  return apiFetch("/api/application", {
+  return apiRequest("/api/application", {
     method: "POST",
     body: JSON.stringify(data),
   });
 }
 
 export function updateApplication(data: any) {
-  return apiFetch("/api/application/update", {
+  return apiRequest("/api/application/update", {
     method: "POST",
     body: JSON.stringify(data),
   });
 }
 
 export function getContinuation() {
-  return apiFetch("/api/application/continuation");
+  return apiRequest("/api/application/continuation");
 }
