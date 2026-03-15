@@ -1,37 +1,37 @@
-import { apiFetch } from "../lib/apiFetch";
+import { apiRequest } from "./client";
 
 export async function getContinuation() {
-  return apiFetch("/api/application/continuation");
+  return apiRequest("/api/application/continuation");
 }
 
 export async function updateApplication(payload: unknown) {
-  return apiFetch("/api/application/update", {
+  return apiRequest("/api/application/update", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
 export async function createApplication(payload: unknown) {
-  return apiFetch("/api/application", {
+  return apiRequest("/api/application", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
 export async function submitReadiness(payload: unknown) {
-  return apiFetch("/api/readiness", {
+  return apiRequest("/api/readiness", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
 export async function continueReadiness(payload: unknown) {
-  return apiFetch("/api/readiness/continue", {
+  return apiRequest("/api/readiness/continue", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
 export async function getReadinessSession(sessionId: string) {
-  return apiFetch(`/api/readiness/${encodeURIComponent(sessionId)}`);
+  return apiRequest(`/api/readiness/${encodeURIComponent(sessionId)}`);
 }

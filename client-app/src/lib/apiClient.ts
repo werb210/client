@@ -1,2 +1,2 @@
-export * from "../api/apiClient";
-export { default } from "../api/apiClient";
+export * from "../api/client";
+export { default } from "../api/client";

@@ -1,4 +1,4 @@
-import { apiFetch } from "../lib/apiFetch";
+import { apiRequest } from "./client";
 
 export interface SaveApplicationStepPayload {
   applicationId: string;
@@ -22,39 +22,39 @@ export async function bootstrapContinuation() {
 }
 
 export async function fetchApplicationContinuation() {
-  return apiFetch("/api/application/continuation") as Promise<ContinuationSessionResponse>;
+  return apiRequest("/api/application/continuation") as Promise<ContinuationSessionResponse>;
 }
 
 export async function saveApplicationStep(payload: SaveApplicationStepPayload) {
-  await apiFetch("/api/application", {
+  await apiRequest("/api/application", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
 export async function saveApplicationProgress(data: any) {
-  return apiFetch("/api/application", {
+  return apiRequest("/api/application", {
     method: "POST",
     body: JSON.stringify(data)
   });
 }
 
 export async function updateApplication(data: any) {
-  return apiFetch("/api/application/update", {
+  return apiRequest("/api/application/update", {
     method: "POST",
     body: JSON.stringify(data)
   });
 }
 
 export async function continueApplication(data: any) {
-  return apiFetch("/api/application/continuation", {
+  return apiRequest("/api/application/continuation", {
     method: "POST",
     body: JSON.stringify(data)
   });
 }
 
 export async function submitApplication(data: any) {
-  return apiFetch("/api/readiness", {
+  return apiRequest("/api/readiness", {
     method: "POST",
     body: JSON.stringify(data)
   });

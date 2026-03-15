@@ -13,7 +13,8 @@ export default function ApplicationStep1() {
       contactName,
       email,
     });
-    const applicationId = response?.id || response?.applicationId || "";
+    const payload = (response ?? {}) as { id?: string; applicationId?: string };
+    const applicationId = payload.id || payload.applicationId || "";
     if (applicationId) {
       setApplicationId(applicationId);
       window.location.href = "/apply/start/step-2";
