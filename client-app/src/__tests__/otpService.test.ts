@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { requestOtp, startOtp, verifyOtp } from "../services/auth";
 import * as clientApi from "../api/client";
+import { API_ENDPOINTS } from "../api/endpoints";
 
 describe("auth OTP service", () => {
   afterEach(() => {
@@ -12,7 +13,7 @@ describe("auth OTP service", () => {
 
     await expect(requestOtp("(555) 111-2222")).resolves.toMatchObject({ ok: true });
 
-    expect(apiSpy).toHaveBeenCalledWith("/api/auth/otp/start", expect.any(Object));
+    expect(apiSpy).toHaveBeenCalledWith(API_ENDPOINTS.OTP_START, expect.any(Object));
   });
 
   it("keeps startOtp compatibility", async () => {
@@ -26,6 +27,6 @@ describe("auth OTP service", () => {
 
     await expect(verifyOtp("5551112222", "123456")).resolves.toMatchObject({ ok: true, sessionToken: "abc" });
 
-    expect(apiSpy).toHaveBeenCalledWith("/api/auth/otp/verify", expect.any(Object));
+    expect(apiSpy).toHaveBeenCalledWith(API_ENDPOINTS.OTP_VERIFY, expect.any(Object));
   });
 });
