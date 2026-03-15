@@ -1,19 +1,13 @@
-import { apiFetch } from "../lib/apiFetch";
+import { startOtp as startOtpAuth, verifyOtp as verifyOtpAuth } from "./auth";
 
 export function getSession() {
-  return apiFetch("/api/auth/me");
+  return Promise.resolve(null);
 }
 
 export function startOtp(phone: string) {
-  return apiFetch("/api/auth/otp/start", {
-    method: "POST",
-    body: JSON.stringify({ phone }),
-  });
+  return startOtpAuth(phone);
 }
 
-export function verifyOtp(code: string) {
-  return apiFetch("/api/auth/otp/verify", {
-    method: "POST",
-    body: JSON.stringify({ code }),
-  });
+export function verifyOtp(code: string, phoneOrSessionToken = "") {
+  return verifyOtpAuth(phoneOrSessionToken, code);
 }

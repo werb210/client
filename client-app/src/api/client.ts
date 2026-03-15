@@ -50,7 +50,18 @@ function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
 }
 
 function normalizePath(path: string) {
-  return resolveApiUrl(path);
+  const resolved = resolveApiUrl(path);
+  const base = getApiBase();
+
+  if (base && resolved.startsWith(`${base}/`)) {
+    return resolved.slice(base.length);
+  }
+
+  if (resolved === base) {
+    return "/";
+  }
+
+  return resolved;
 }
 
 export async function clientApi(path: string, options: RequestInit = {}) {

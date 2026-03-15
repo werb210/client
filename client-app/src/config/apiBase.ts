@@ -1,6 +1,5 @@
-export const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  window.RUNTIME_CONFIG?.API_BASE_URL ||
-  "/api";
+import { runtimeConfig } from "./runtimeConfig";
+
+export const API_BASE = runtimeConfig.API_BASE;
 
 export default API_BASE;

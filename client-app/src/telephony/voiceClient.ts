@@ -4,7 +4,7 @@ import apiClient from "@/api/client"
 let device: Device | null = null
 
 export async function initializeVoice(identity: string) {
-  const { data } = await apiClient.post<{ token: string }>("/api/telephony/token", { identity })
+  const { data } = await apiClient.post<{ token: string }>("/telephony/token", { identity })
 
   device = new Device(data.token)
 
