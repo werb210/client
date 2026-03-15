@@ -1,4 +1,5 @@
 import { apiRequest } from "../api/client";
+import { API_ENDPOINTS } from "../api/endpoints";
 
 type ApiPayload = Record<string, any> | null;
 
@@ -33,7 +34,7 @@ export type OtpVerifyResult = {
 };
 
 export async function requestOtp(phone: string) {
-  const data = (await apiRequest("/api/auth/otp/start", {
+  const data = (await apiRequest(API_ENDPOINTS.OTP_START, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ phone }),
@@ -51,7 +52,7 @@ export async function startOtp(phone: string) {
 }
 
 export async function verifyOtp(phoneOrSessionToken: string, code: string) {
-  const data = (await apiRequest("/api/auth/otp/verify", {
+  const data = (await apiRequest(API_ENDPOINTS.OTP_VERIFY, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ sessionToken: phoneOrSessionToken, phone: phoneOrSessionToken, code }),

@@ -1,4 +1,5 @@
 import { apiRequest } from "../api/request";
+import { API_ENDPOINTS } from "../api/endpoints";
 
 type CallStatus = {
   status: string;
@@ -8,7 +9,7 @@ type CallStatus = {
 
 export async function getCallStatus(): Promise<CallStatus> {
   try {
-    const data = await apiRequest<Partial<CallStatus>>("/api/telephony/presence", {
+    const data = await apiRequest<Partial<CallStatus>>(API_ENDPOINTS.TELEPHONY_PRESENCE, {
       method: "GET",
     });
 

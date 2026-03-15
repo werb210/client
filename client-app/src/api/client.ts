@@ -1,4 +1,5 @@
 import axios, { AxiosError, type AxiosRequestConfig, type AxiosResponse } from "axios";
+import type { ApiEndpoint } from "./endpoints";
 
 declare global {
   interface Window {
@@ -23,7 +24,7 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
-function normalizePath(url: string): string {
+function normalizePath(url: string | ApiEndpoint): string {
   if (!url) return "/";
   if (/^https?:\/\//.test(url)) return url;
   const normalized = url.startsWith("/") ? url : `/${url}`;
@@ -51,7 +52,7 @@ function toAxiosConfig(options: RequestInit = {}): AxiosRequestConfig {
   };
 }
 
-export function buildApiUrl(path: string): string {
+export function buildApiUrl(path: string | ApiEndpoint): string {
   const pathPart = normalizePath(path);
 
   if (/^https?:\/\//.test(pathPart)) {
@@ -62,7 +63,7 @@ export function buildApiUrl(path: string): string {
   return `${root}${pathPart}`;
 }
 
-export async function apiRequest<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+export async function apiRequest<T = unknown>(path: string | ApiEndpoint, options: RequestInit = {}): Promise<T> {
   try {
     const response = await apiClient.request<T>({
       url: normalizePath(path),
@@ -78,15 +79,15 @@ export async function apiRequest<T = unknown>(path: string, options: RequestInit
   }
 }
 
-export const get = <T = unknown>(url: string, config?: AxiosRequestConfig) =>
+export const get = <T = unknown>(url: string | ApiEndpoint, config?: AxiosRequestConfig) =>
   apiClient.get<T>(normalizePath(url), config);
-export const post = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+export const post = <T = unknown>(url: string | ApiEndpoint, data?: unknown, config?: AxiosRequestConfig) =>
   apiClient.post<T>(normalizePath(url), data, config);
-export const put = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+export const put = <T = unknown>(url: string | ApiEndpoint, data?: unknown, config?: AxiosRequestConfig) =>
   apiClient.put<T>(normalizePath(url), data, config);
-export const patch = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) =>
+export const patch = <T = unknown>(url: string | ApiEndpoint, data?: unknown, config?: AxiosRequestConfig) =>
   apiClient.patch<T>(normalizePath(url), data, config);
-export const del = <T = unknown>(url: string, config?: AxiosRequestConfig) =>
+export const del = <T = unknown>(url: string | ApiEndpoint, config?: AxiosRequestConfig) =>
   apiClient.delete<T>(normalizePath(url), config);
 
 const api = {

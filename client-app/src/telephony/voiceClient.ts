@@ -1,10 +1,11 @@
 import { Device } from "@twilio/voice-sdk"
 import apiClient from "@/api/client"
+import { API_ENDPOINTS } from "@/api/endpoints"
 
 let device: Device | null = null
 
 export async function initializeVoice(identity: string) {
-  const { data } = await apiClient.post<{ token: string }>("/api/telephony/token", { identity })
+  const { data } = await apiClient.post<{ token: string }>(API_ENDPOINTS.TELEPHONY_TOKEN, { identity })
 
   device = new Device(data.token)
 
