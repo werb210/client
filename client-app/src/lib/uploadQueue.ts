@@ -1,3 +1,5 @@
+import api from "@/api/client";
+
 const DB_NAME = "bf-upload-queue";
 const STORE_NAME = "uploads";
 const MAX_QUEUE_SIZE = 20;
@@ -68,11 +70,10 @@ export async function processQueue() {
 
   for (const item of all) {
     try {
-      const response = await fetch(item.url, {
-        method: "POST",
-        body: item.formData,
+      const response = await api.post(item.url, item.formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      if (response.ok) {
+      if (response.status >= 200 && response.status < 300) {
         store.delete(item.id);
       }
     } catch {
