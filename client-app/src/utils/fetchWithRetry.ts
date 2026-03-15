@@ -1,4 +1,6 @@
-// @ts-nocheck
+import axios from "axios";
+import api from "@/api/client";
+
 const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
 const DEFAULT_TIMEOUT_MS = 15000;
 
@@ -12,12 +14,10 @@ export class FetchRequestError extends Error {
   }
 }
 
-function buildHeaders(headers?: HeadersInit) {
-  const normalized = new Headers(headers || {});
-  if (!normalized.has("Content-Type")) {
-    normalized.set("Content-Type", "application/json");
-  }
-  return normalized;
+function withTimeoutSignal(timeoutMs: number) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  return { controller, timeoutId };
 }
 
 export async function safeFetch(
@@ -25,15 +25,17 @@ export async function safeFetch(
   init?: RequestInit,
   options?: { timeoutMs?: number }
 ) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), options?.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+  const { controller, timeoutId } = withTimeoutSignal(options?.timeoutMs ?? DEFAULT_TIMEOUT_MS);
 
   try {
-    const response = await fetch(input, {
-      credentials: "include",
-      ...init,
-      headers: buildHeaders(init?.headers),
+    const response = await api.request({
+      url: String(input),
+      method: init?.method,
+      data: init?.body,
+      headers: init?.headers as Record<string, string> | undefined,
       signal: controller.signal,
+      validateStatus: () => true,
+      withCredentials: true,
     });
 
     if (response.status === 401) {
@@ -43,13 +45,20 @@ export async function safeFetch(
       throw new FetchRequestError("Unauthorized. Please restart at step 1.", 401);
     }
 
-    return response;
-  } catch {
+    return new Response(JSON.stringify(response.data), {
+      status: response.status,
+      headers: new Headers(response.headers as HeadersInit),
+    });
+  } catch (error) {
     if (error instanceof FetchRequestError) {
       throw error;
     }
 
     if (error instanceof DOMException && error.name === "AbortError") {
+      throw new FetchRequestError("Request timed out.", undefined, true);
+    }
+
+    if (axios.isAxiosError(error) && error.code === "ERR_CANCELED") {
       throw new FetchRequestError("Request timed out.", undefined, true);
     }
 
@@ -74,7 +83,7 @@ export async function fetchWithRetry(
       if (response.ok || !RETRYABLE_STATUS.has(response.status) || attempt >= maxAttempts) {
         return response;
       }
-    } catch {
+    } catch (error) {
       if (attempt >= maxAttempts) {
         throw error;
       }
